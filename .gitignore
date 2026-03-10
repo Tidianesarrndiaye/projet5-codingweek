@@ -7,3 +7,4 @@ models/
 reports/
 .DS_Store
 Thumbs.db
+.vscode/
