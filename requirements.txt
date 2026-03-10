@@ -1,2 +1,22 @@
 # Tests
+printf == 8.0.2
 pytest
+
+# Core Data Science
+numpy
+pandas
+scikit-learn
+joblib
+
+# Visualization
+matplotlib
+seaborn
+
+# ML Models
+lightgbm
+catboost
+xgboost
+
+# Web App
+streamlit
+
