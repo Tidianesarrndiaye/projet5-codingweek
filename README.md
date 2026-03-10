@@ -233,4 +233,4 @@ This runs the web interface required by the project:
 
 - clinician inputs
 - predictions
-- SHAP visualizations (next steps)1
+- SHAP visualizations (next steps)
