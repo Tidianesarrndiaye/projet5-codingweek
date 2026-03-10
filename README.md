@@ -129,7 +129,7 @@ replace `<your_dataset>.csv` with the file name of the dataset
 
 #### 1. Place the Dataset in the Correct Folder
 Download the dataset from UCI (as required in the project instructions):
-[dataset](https://archive.ics.uci.edu/dataset/938/regensburg+pediatric+appendicitis)
+<a href="https://archive.ics.uci.edu/dataset/938/regensburg+pediatric+appendicitis" target="_blank">dataset</a>
 Then put the `dataset` inside: `projet5-codingweek/data/raw/`
 
 Example:
@@ -174,7 +174,7 @@ Using your preprocess_pipeline() function:
 missing values handling
 outlier clipping
 one‑hot encoding
-memory optimization (required by the project) 1
+memory optimization (required by the project)
 
 3. Split the dataset
 ```shell
