@@ -1,2 +1,28 @@
-# Tests
+# Core scientific libraries
+pandas
+numpy
+matplotlib
+seaborn
+
+# Machine Learning
+scikit-learn
+lightgbm
+catboost
+
+# Explainability
+shap
+
+# Model serialization
+joblib
+
+# Web app (UI)
+streamlit
+
+# Utility
+tqdm
+
+# Testing
 pytest
+
+# To avoid version conflicts
+packaging

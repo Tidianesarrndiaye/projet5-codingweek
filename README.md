@@ -70,21 +70,30 @@ projet5-codingweek/
 │       └── ci.yml
 │
 ├── notebooks/
-│   └── (vide ou .keep pour le moment)
+│   └── eda.ipynb
 │
 ├── src/
-│   └── (plus tard: data_processing.py, train_model.py)
+│   ├── data_processing.py
+│   ├── models.py
+│   ├── train_model.py
+│   └── evaluate.py
 │
 ├── app/
-│   └── (plus tard: app.py)
+│   └── app.py
 │
 ├── tests/
 │   ├── test_sample.py
-│   └── (d’autres tests viendront après)
+│   └── test_data_processing.py
+│   └── test_inference.py
 │
 ├── data/
 │   ├── raw/
-│   │   └── (dataset brut .csv)
+|   |    ├── US_Pictures/
+│   |    │   └──  B-mode ultrasound images named as subject #>.<view #> *.bmp
+│   |    ├── app_data.xlsx  tabular data with 53 features and 782 Instances 
+│   |    ├── regensburg_pediatric_appendicitis.csv derived from app_data.xlsx
+│   |    ├── multiple_in_one: a list of US image names containing multiple snapshots
+|   |   
 │   └── processed/
 │       └── (sorties prétraitées)
 │
