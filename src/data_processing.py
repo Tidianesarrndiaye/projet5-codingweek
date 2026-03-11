@@ -4,42 +4,55 @@ import numpy as np
 
 def handle_outliers(df):
     """
-    Handle outliers in the DataFrame by replacing values that are outside of 1.5 times the interquartile range (IQR) with the median of the column.
+    Handle outliers in the DataFrame by excluding:
+    - rows where the value in a column is outside the interquartile range (IQR).
     Returns the DataFrame with outliers handled. 
     """
-    for column in df.columns:
-        if df[column].dtype in ['int64', 'float64']:
-            Q1 = df[column].quantile(0.25)
-            Q3 = df[column].quantile(0.75)
+    df_local = df.copy()
+    for column in df_local.columns:
+        if df_local[column].dtype in ['float64', 'int64']:
+            Q1 = df_local[column].quantile(0.25)
+            Q3 = df_local[column].quantile(0.75)
             IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR
+            lower_bound = Q1 - 1.5 * IQR 
             upper_bound = Q3 + 1.5 * IQR
-            median = df[column].median()
-            df[column] = df[column].apply(lambda x: median if x < lower_bound or x > upper_bound else x)
-    return df
+            df = df_local[(df_local[column] >= lower_bound) & (df_local[column] <= upper_bound)]
+    return df_local
+            
+            
 
-
+# Conversion des donnees categorical en numerique
 def encode_features(df):
     """
     Encode categorical features in the DataFrame using one-hot encoding."""
-    return pd.get_dummies(df, columns=[col for col in df.columns if df[col].dtype == 'object'])
-
+    df_local = df.copy()
+    for column in df_local.columns:
+        if df_local[column].dtype == 'object':
+            unique_values = df_local[column].unique()
+            mapping = {value: idx for idx, value in enumerate(unique_values)}
+            df_local[column] = df_local[column].map(mapping)
+    return df_local
+            
 
 def handle_missing_values(df):
     """
     On suppose que les outliers ont déjà été traités.
+    Les colonnes avec plus de 5% de valeurs manquantes sont supprimées du DataFrame. 
+    On considere que ces colonnes ne sont pas pertinentes pour l'analyse.
     Gère les missing values dans le DataFrame en les remplaçant par:
     - la moyenne pour les colonnes numériques 
     - le mode pour les colonnes catégorielles.
     Returns the DataFrame with missing values handled. 
     
     """
-    for column in df.columns:
-        if df[column].dtype in ['int64', 'float64']:
-            df[column].fillna(df[column].mean(), inplace=True)
-        else:
-            df[column].fillna(df[column].mode()[0], inplace=True)
-    return df
+    df_local = df.copy()
+    for column in df_local.columns:
+        if df_local[column].isnull().sum() > 0:
+            if df_local[column].dtype in ['float64', 'int64']:
+                df_local[column] = df_local[column].fillna(df_local[column].mean())
+            else:
+                df_local[column] = df_local[column].fillna(df_local[column].mode()[0])
+    return df_local
 
 
 
@@ -73,9 +86,9 @@ def  preprocess_pipeline(df) :
     Pipeline de prétraitement des données qui inclut la gestion des outliers, l'encodage des features et la gestion des valeurs manquantes.
     Returns the preprocessed DataFrame. 
     """
-    df = handle_outliers(df)
-    df = encode_features(df)
-    df = handle_missing_values(df)
-    df = optimize_memory(df)
-    return df
+    df_no_outliers = handle_outliers(df) 
+    df_encode = encode_features(df_no_outliers)
+    df_clean = handle_missing_values(df_encode)
+    df_optim = optimize_memory(df_clean)
+    return df_optim
     
