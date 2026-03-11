@@ -20,6 +20,9 @@ streamlit
 
 # Utility
 tqdm
+openpyxl
+jupyter
+ipykernel
 
 # Testing
 pytest
