@@ -237,9 +237,36 @@ After training, you can run the Streamlit app to input patient data and see pred
 ``` shell 
 streamlit run app/app.py
 ```
-
 This runs the web interface required by the project:
 
 - clinician inputs
 - predictions
-- SHAP visualizations (next steps)
+- SHAP visualizations 
+
+
+# Data Processing Module (`src/data_processing.py`)
+
+Ce module contient toutes les étapes de prétraitement exigées par le projet.
+
+## 1. Outliers — `handle_outliers(df)`
+Traite les valeurs extrêmes avec la méthode IQR (±1.5 × IQR) puis remplace les outliers par la médiane.
+
+## 2. Encodage — `encode_features(df)`
+Transforme toutes les colonnes catégorielles en variables numériques via one-hot encoding.
+
+## 3. Valeurs manquantes — `handle_missing_values(df)`
+- Colonnes numériques → remplacées par la moyenne  
+- Colonnes catégorielles → remplacées par le mode  
+
+## 4. Optimisation mémoire — `optimize_memory(df)`
+Exigence du projet :
+- downcasting des `int64` → `int32`/`int16`/`int8`
+- downcasting des `float64` → `float32`
+- conversion en `category` quand c’est pertinent
+
+Permet de réduire la taille du DataFrame et d'améliorer les performances.
+
+## 5. Pipeline complet — `preprocess_pipeline(df)`
+Applique automatiquement toutes les étapes dans l’ordre :
+`outliers → encodage → missing values → optimisation mémoire`
+Retourne un DataFrame final prêt pour l’entraînement du modèle
