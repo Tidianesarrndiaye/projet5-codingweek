@@ -16,7 +16,7 @@ def handle_outliers(df):
             IQR = Q3 - Q1
             lower_bound = Q1 - 1.5 * IQR 
             upper_bound = Q3 + 1.5 * IQR
-            df = df_local[(df_local[column] >= lower_bound) & (df_local[column] <= upper_bound)]
+            df_local = df_local[(df_local[column] >= lower_bound) & (df_local[column] <= upper_bound)]
     return df_local
             
             
