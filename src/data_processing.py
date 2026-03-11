@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 
 def handle_outliers(df):
     """
@@ -40,8 +42,31 @@ def handle_missing_values(df):
     return df
 
 
-def optimize_memory(df):
-    pass
+
+
+
+
+def optimize_memory(df: pd.DataFrame) -> pd.DataFrame:
+    df_opt = df.copy()
+    for col in df_opt.columns:
+        col_type = df_opt[col].dtype
+
+        if pd.api.types.is_integer_dtype(col_type):
+            cmin, cmax = df_opt[col].min(), df_opt[col].max()
+            for dtype in [np.int8, np.int16, np.int32, np.int64]:
+                if np.iinfo(dtype).min <= cmin and cmax <= np.iinfo(dtype).max:
+                    df_opt[col] = df_opt[col].astype(dtype)
+                    break
+
+        elif pd.api.types.is_float_dtype(col_type):
+            df_opt[col] = df_opt[col].astype(np.float32)
+
+        elif pd.api.types.is_object_dtype(col_type):
+            # Catégoriser si peu de modalités
+            nunique = df_opt[col].nunique(dropna=False)
+            if nunique / max(len(df_opt), 1) < 0.5:
+                df_opt[col] = df_opt[col].astype('category')
+    return df_opt
 
 def  preprocess_pipeline(df) :
     """
@@ -51,4 +76,6 @@ def  preprocess_pipeline(df) :
     df = handle_outliers(df)
     df = encode_features(df)
     df = handle_missing_values(df)
+    df = optimize_memory(df)
     return df
+    
