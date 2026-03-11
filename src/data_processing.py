@@ -29,6 +29,7 @@ def encode_features(df):
     for column in df_local.columns:
         if df_local[column].dtype == 'object':
             unique_values = df_local[column].unique()
+            unique_values.sort()  # Tri des valeurs uniques pour une encodage cohérent
             mapping = {value: idx for idx, value in enumerate(unique_values)}
             df_local[column] = df_local[column].map(mapping)
     return df_local
