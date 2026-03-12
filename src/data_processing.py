@@ -1,95 +1,147 @@
-import pandas as pd
+# src/data_processing.py
+
+from __future__ import annotations
+from typing import Tuple, Dict, Any
 import numpy as np
+import pandas as pd
 
 
-def handle_outliers(df):
+def drop_high_missing_columns(
+    df: pd.DataFrame,
+    threshold: float = 0.05
+) -> pd.DataFrame:
     """
-    Handle outliers in the DataFrame by excluding:
-    - rows where the value in a column is outside the interquartile range (IQR).
-    Returns the DataFrame with outliers handled. 
+    Supprime les colonnes dont la proportion de valeurs manquantes dépasse `threshold`.
+    threshold=0.05 => >5% de NaN -> drop.
     """
     df_local = df.copy()
-    for column in df_local.columns:
-        if df_local[column].dtype in ['float64', 'int64']:
-            Q1 = df_local[column].quantile(0.25)
-            Q3 = df_local[column].quantile(0.75)
-            IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR 
-            upper_bound = Q3 + 1.5 * IQR
-            df_local = df_local[(df_local[column] >= lower_bound) & (df_local[column] <= upper_bound)]
+    missing_ratio = df_local.isna().mean()
+    cols_to_drop = missing_ratio[missing_ratio > threshold].index.tolist()
+    if cols_to_drop:
+        df_local = df_local.drop(columns=cols_to_drop)
     return df_local
-            
-            
 
-# Conversion des donnees categorical en numerique
-def encode_features(df):
-    """
-    Encode categorical features in the DataFrame using one-hot encoding."""
-    df_local = df.copy()
-    for column in df_local.columns:
-        if df_local[column].dtype == 'object':
-            unique_values = df_local[column].unique()
-            unique_values.sort()  # Tri des valeurs uniques pour une encodage cohérent
-            mapping = {value: idx for idx, value in enumerate(unique_values)}
-            df_local[column] = df_local[column].map(mapping)
-    return df_local
-            
 
-def handle_missing_values(df):
+def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """
-    On suppose que les outliers ont déjà été traités.
-    Les colonnes avec plus de 5% de valeurs manquantes sont supprimées du DataFrame. 
-    On considere que ces colonnes ne sont pas pertinentes pour l'analyse.
-    Gère les missing values dans le DataFrame en les remplaçant par:
-    - la moyenne pour les colonnes numériques 
-    - le mode pour les colonnes catégorielles.
-    Returns the DataFrame with missing values handled. 
-    
+    Impute les valeurs manquantes:
+      - numériques: médiane
+      - catégorielles/objet: mode
     """
     df_local = df.copy()
-    for column in df_local.columns:
-        if df_local[column].isnull().sum() > 0:
-            if df_local[column].dtype in ['float64', 'int64']:
-                df_local[column] = df_local[column].fillna(df_local[column].mean())
+
+    num_cols = df_local.select_dtypes(include=[np.number]).columns
+    cat_cols = df_local.select_dtypes(exclude=[np.number]).columns
+
+    # Numériques -> médiane
+    for c in num_cols:
+        if df_local[c].isna().any():
+            df_local[c] = df_local[c].fillna(df_local[c].median())
+
+    # Catégorielles -> mode
+    for c in cat_cols:
+        if df_local[c].isna().any():
+            mode_vals = df_local[c].mode(dropna=True)
+            if not mode_vals.empty:
+                df_local[c] = df_local[c].fillna(mode_vals.iloc[0])
             else:
-                df_local[column] = df_local[column].fillna(df_local[column].mode()[0])
+                # si tout est NaN, remplace par chaîne vide
+                df_local[c] = df_local[c].fillna("")
+
     return df_local
 
 
+def handle_outliers(
+    df: pd.DataFrame,
+    iqr_factor: float = 1.5
+) -> pd.DataFrame:
+    """
+    IQR clipping: pour chaque colonne numérique,
+    clip les valeurs en dehors de [Q1 - k*IQR, Q3 + k*IQR].
+    Contrairement à un filtrage de lignes (qui peut vider le dataset),
+    on clippe les valeurs extrêmes aux bornes calculées.
+    """
+    df_local = df.copy()
+    num_cols = df_local.select_dtypes(include=[np.number]).columns
+
+    for c in num_cols:
+        q1 = df_local[c].quantile(0.25)
+        q3 = df_local[c].quantile(0.75)
+        iqr = q3 - q1
+        if pd.isna(iqr) or iqr == 0:
+            continue
+        lower = q1 - iqr_factor * iqr
+        upper = q3 + iqr_factor * iqr
+        df_local[c] = df_local[c].clip(lower, upper)
+
+    return df_local
 
 
+def encode_features(
+    df: pd.DataFrame,
+    drop_first: bool = True
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """
+    Encodage one-hot des colonnes non numériques (sécurisé pour les non ordinales).
+    Retourne le DataFrame encodé + un méta-dictionnaire avec les colonnes finales.
+    """
+    df_local = df.copy()
+    cat_cols = df_local.select_dtypes(exclude=[np.number]).columns.tolist()
+
+    encoded = pd.get_dummies(df_local, columns=cat_cols, drop_first=drop_first)
+    meta = {
+        "categorical_columns": cat_cols,
+        "encoded_columns": list(encoded.columns),
+        "drop_first": drop_first
+    }
+    return encoded, meta
 
 
 def optimize_memory(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Réduction de la mémoire:
+      - downcast int/float
+      - conversion object -> category si faible cardinalité
+    """
     df_opt = df.copy()
+
     for col in df_opt.columns:
-        col_type = df_opt[col].dtype
+        s = df_opt[col]
 
-        if pd.api.types.is_integer_dtype(col_type):
-            cmin, cmax = df_opt[col].min(), df_opt[col].max()
-            for dtype in [np.int8, np.int16, np.int32, np.int64]:
-                if np.iinfo(dtype).min <= cmin and cmax <= np.iinfo(dtype).max:
-                    df_opt[col] = df_opt[col].astype(dtype)
-                    break
+        # Downcast numériques
+        if pd.api.types.is_integer_dtype(s):
+            df_opt[col] = pd.to_numeric(s, downcast="integer")
+        elif pd.api.types.is_float_dtype(s):
+            df_opt[col] = pd.to_numeric(s, downcast="float")
 
-        elif pd.api.types.is_float_dtype(col_type):
-            df_opt[col] = df_opt[col].astype(np.float32)
+        # Object -> Category si faible cardinalité
+        elif pd.api.types.is_object_dtype(s):
+            nunique = s.nunique(dropna=True)
+            total = len(s)
+            if total > 0 and 0 < nunique < 0.5 * total:
+                df_opt[col] = s.astype("category")
 
-        elif pd.api.types.is_object_dtype(col_type):
-            # Catégoriser si peu de modalités
-            nunique = df_opt[col].nunique(dropna=False)
-            if nunique / max(len(df_opt), 1) < 0.5:
-                df_opt[col] = df_opt[col].astype('category')
     return df_opt
 
-def  preprocess_pipeline(df) :
+
+def preprocess_pipeline(
+    df: pd.DataFrame,
+    missing_threshold: float = 0.05,
+    iqr_factor: float = 1.5,
+    drop_first: bool = True
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """
-    Pipeline de prétraitement des données qui inclut la gestion des outliers, l'encodage des features et la gestion des valeurs manquantes.
-    Returns the preprocessed DataFrame. 
+    Pipeline complet:
+      1) drop colonnes avec > missing_threshold de NaN
+      2) imputation des NaN (num: médiane, cat: mode)
+      3) clipping des outliers (IQR)
+      4) one-hot encoding des colonnes catégorielles
+      5) optimization mémoire
+    Retourne: (X_preprocessed, meta)
     """
-    df_no_outliers = handle_outliers(df) 
-    df_encode = encode_features(df_no_outliers)
-    df_clean = handle_missing_values(df_encode)
-    df_optim = optimize_memory(df_clean)
-    return df_optim
-    
+    step1 = drop_high_missing_columns(df, threshold=missing_threshold)
+    step2 = handle_missing_values(step1)
+    step3 = handle_outliers(step2, iqr_factor=iqr_factor)
+    step4, meta = encode_features(step3, drop_first=drop_first)
+    step5 = optimize_memory(step4)
+    return step5, meta
