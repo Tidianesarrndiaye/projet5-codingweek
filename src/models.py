@@ -28,7 +28,7 @@ def get_param_grids():
             "model__num_leaves": [31, 63],
             "model__max_depth": [-1, 8],
             "model__min_child_samples": [20, 40]
-        }
-        # "catboost": { "model__depth":[6,8], "model__learning_rate":[0.03,0.1], "model__iterations":[400,800] }
+        },
+        "catboost": { "model__depth":[6,8], "model__learning_rate":[0.03,0.1], "model__iterations":[400,800] }
     }
     return grids
