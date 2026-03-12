@@ -118,10 +118,27 @@ Choose a location on your computer
 
 ---
 
-## 2. Install Dependencies
+## 2.Install & Activate Your Virtual Environment  
 
 Before running any code, create and activate a virtual environment.
 
+### Windows (PowerShell)
+``` shell
+.\.venv\Scripts\Activate.ps1
+```
+You should see **(.venv)** before your current directory.
+Si il y a un problème
+```shell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### Windows (Command Prompt)
+
+``` shell
+.\.venv\Scripts\Activate
+```
+
+You should see **(.venv)** before your current directory.
 ### Windows (Git Bash)
 
 ```bash
@@ -138,79 +155,42 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Then install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 3. Train the Model
-
-To train the machine learning model, make sure the dataset is placed in:
-
-```
-data/raw/<your_dataset>.csv
-```
-
-Replace `<your_dataset>.csv` with the dataset file name.
-
-### 1. Place the Dataset in the Correct Folder
-
-Download the dataset from UCI:
-
-https://archive.ics.uci.edu/dataset/938/regensburg+pediatric+appendicitis
-
-Then put the dataset inside:
-
-```
-projet5-codingweek/data/raw/
-```
-
-Example:
-
-```
-projet5-codingweek/data/raw/regensburg_pediatric_appendicitis.csv
-```
-
----
-
-### 2. Activate Your Virtual Environment
-
-Windows + Git Bash:
-
-```bash
-source .venv/Scripts/activate
-```
-
-Mac/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
 Confirm it works:
 
 ```bash
 which python
 ```
+## 3. Analyse exploratoire des données (EDA)
 
----
+### Valeurs manquantes
+Nous avons analysé les valeurs manquantes et les avons traitées en utilisant :
+- imputation par la moyenne
+- imputation par la médiane
+- suppression des lignes incomplètes (selon la variable)
 
-### 3. Install dependencies if needed
+### Valeurs aberrantes
+Les valeurs aberrantes ont été détectées en utilisant :
+- des boxplots
+- la méthode IQR
 
-See section **Install Dependencies**
+### Équilibre des classes
+Le jeu de données est approximativement équilibré :
+- ~50 % appendicite
+- ~50 % non-appendicite
 
----
+Par conséquent, aucune technique de suréchantillonnage n’a été appliquée.
 
-### 4. Run the Training Script
+### Corrélation des variables
+Une matrice de corrélation a été utilisée pour identifier les variables fortement corrélées.
+
+
+## 4. Run the Training Script
 
 ```bash
 python src/train_model.py \
-  --input data/raw/regensburg_pediatric_appendicitis.csv \
-  --target appendicitis \
-  --out models/best_model.pkl
+  --input data/processed/features_and_target.csv
+  --target diagnosis_no appendicitis \
+  --out models/best_model.joblib
 ```
 
 ---
@@ -263,7 +243,7 @@ Based on:
 
 | File | Location | Description |
 |-----|-----|-----|
-| Final model | `models/best_model.pkl` | Used by Streamlit app |
+| Final model | `models/best_model.joblib` | Used by Streamlit app |
 | Feature schema | `models/feature_schema.json` | Ensures app input columns match training columns |
 | Evaluation metrics | `reports/results.json` | Required for documentation |
 
@@ -274,14 +254,14 @@ Based on:
 You should see messages like:
 
 ```
-Training complete. Best model: random_forest
+Training completed. Best model: random_forest
 Metrics: {...}
 ```
 
 And the following files will be created:
 
 ```
-models/best_model.pkl
+models/best_model.joblib
 models/feature_schema.json
 reports/results.json
 ```
