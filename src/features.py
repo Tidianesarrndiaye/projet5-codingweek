@@ -20,8 +20,9 @@ def rank_features_by_mi(X: pd.DataFrame, y: pd.Series, top_k: int = 20):
     mi_series = pd.Series(mi, index=num_cols).sort_values(ascending=False)
     return mi_series.head(top_k).index.tolist(), mi_series
 
-def rfe_logreg(X: pd.DataFrame, y: pd.Series, n_features: int = 15):
-    X_enc = pd.get_dummies(X, drop_first=True)
+def rfe_logreg(X_enc: pd.DataFrame, target_col: str, n_features: int = 15):
+    y = X_enc[target_col]
+    X_enc = X_enc.drop(columns=[target_col])
     scaler = StandardScaler(with_mean=False)  # sparse-friendly
     X_scaled = scaler.fit_transform(X_enc)
     est = LogisticRegression(max_iter=500, n_jobs=None)
