@@ -2,18 +2,17 @@ import sys
 import os
 
 # Ajouter le dossier parent (la racine du projet) au PYTHONPATH
-sys.path.append(os.path.abspath(".."))
 
-print("PYTHONPATH:", sys.path)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pandas as pd
 import joblib
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
-from src.data_processing import optimize_memory, train_test_prepare
-from src.models import get_models, get_param_grids
-from src.evaluate import compute_metrics, plot_roc_curves
+from data_processing import optimize_memory, train_test_prepare
+from models import get_models, get_param_grids
+from evaluate import compute_metrics, plot_roc_curves
 
 DATA_PATH = "data/processed/features_and_target.csv"
 TARGET = "Diagnosis_no appendicitis"
@@ -41,7 +40,6 @@ def main():
     print("Colonnes variance ~0:", low_var_cols[:20])
     models = get_models()
     grids = get_param_grids()
-"""
     results = []
     roc_items = []
 
@@ -81,7 +79,6 @@ def main():
     print(f"Training completed. Best model: {best_name}")
     best_model = joblib.load(f"{MODEL_DIR}/{best_name}.joblib")
     joblib.dump(best_model, f"{MODEL_DIR}/best_model.joblib")
-"""
 if __name__ == "__main__":
     import os
 

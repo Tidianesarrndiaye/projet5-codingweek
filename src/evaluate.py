@@ -16,4 +16,4 @@ def plot_roc_curves(roc_items, title="Courbes ROC"):
     for name, y_true, y_prob in roc_items:
         RocCurveDisplay.from_predictions(y_true, y_prob, name=name)
     plt.title(title)
-    plt.show()
+    plt.savefig("artifacts/roc_curves.png")

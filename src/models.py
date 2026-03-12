@@ -7,7 +7,18 @@ def get_models():
     models = {
         "svm_rbf": SVC(kernel="rbf", probability=True, class_weight=None, random_state=42),
         "rf": RandomForestClassifier(n_estimators=400, max_depth=None, n_jobs=-1, random_state=42),
-        "lgbm": LGBMClassifier(n_estimators=600, learning_rate=0.03, random_state=42)
+        "lgbm": LGBMClassifier(
+n_estimators=600,
+    learning_rate=0.05,
+    num_leaves=63,
+    max_depth=-1,
+    min_data_in_leaf=20,
+    min_gain_to_split=0.0,
+    subsample=0.8,            # (alias bagging_fraction)
+    subsample_freq=1,         # (alias bagging_freq)
+    colsample_bytree=0.8,     # (alias feature_fraction)
+    random_state=42
+)
         # "catboost": CatBoostClassifier(verbose=False, random_state=42)  # optionnel
     }
     return models
@@ -29,6 +40,6 @@ def get_param_grids():
             "model__max_depth": [-1, 8],
             "model__min_child_samples": [20, 40]
         },
-        "catboost": { "model__depth":[6,8], "model__learning_rate":[0.03,0.1], "model__iterations":[400,800] }
+        # "catboost": { "model__depth":[6,8], "model__learning_rate":[0.03,0.1], "model__iterations":[400,800] }
     }
     return grids
