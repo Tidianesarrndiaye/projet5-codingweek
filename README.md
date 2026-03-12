@@ -9,55 +9,58 @@ Ce dépôt contient la structure minimale demandée pour démarrer le projet.
 4. Ajouter les premiers scripts et tests
 5. Télécharger le dataset et commencer l’EDA
 
-# Project Objectives (Coding Week – Project 5)
+---
 
-This document summarizes all official project objectives extracted from the project description PDF.
+# Objectifs du projet (Coding Week – Projet 5)
 
-## 🎯 Main Project Goals
-- Develop a robust and explainable machine learning model. 
-- Ensure transparency of predictions using SHAP explainability. 
-- Create an intuitive user interface (Streamlit or Flask). 
-- Follow professional software development practices (GitHub, CI/CD automation). 
-- Demonstrate prompt engineering by documenting AI-generated prompts and results. 
+Ce document résume tous les objectifs officiels du projet extraits du PDF de description du projet.
 
-## 📊 Data Analysis Objectives
-- Identify missing values and describe how they are handled. 
-- Detect outliers and document the chosen correction method. 
-- Evaluate dataset balance (~50/50 classes). Document any balancing technique used. 
-- Analyze correlations and describe how correlated features are managed. 
+## 🎯 Objectifs principaux du projet
+- Développer un modèle de machine learning robuste et explicable.
+- Garantir la transparence des prédictions grâce à l’explicabilité SHAP.
+- Créer une interface utilisateur intuitive (Streamlit ou Flask).
+- Suivre des pratiques professionnelles de développement logiciel (GitHub, automatisation CI/CD).
+- Démontrer l’utilisation du prompt engineering en documentant les prompts générés par l’IA et leurs résultats.
 
-## 🤖 Machine Learning Objectives
-- Train and evaluate at least **three** models from the following: SVM, Random Forest, LightGBM, CatBoost. 
-- Use ROC-AUC, accuracy, precision, recall, and F1-score to compare models. 
-- Justify the selection of the best-performing model. 
+## 📊 Objectifs d’analyse des données
+- Identifier les valeurs manquantes et décrire comment elles sont traitées.
+- Détecter les outliers et documenter la méthode de correction choisie.
+- Évaluer l’équilibre du dataset (~50/50 classes). Documenter toute technique d’équilibrage utilisée.
+- Analyser les corrélations et décrire comment les variables corrélées sont gérées.
 
-## 💾 Memory Optimization Objective
-- Implement `optimize_memory(df)` to reduce dataframe memory footprint by downcasting datatypes. 
-- Demonstrate memory improvement before/after optimization in the notebook. 
+## 🤖 Objectifs de machine learning
+- Entraîner et évaluer au moins **trois** modèles parmi les suivants : SVM, Random Forest, LightGBM, CatBoost.
+- Utiliser ROC-AUC, accuracy, precision, recall et F1-score pour comparer les modèles.
+- Justifier le choix du modèle le plus performant.
 
-## 🧠 SHAP Explainability Objectives
-- Generate SHAP summary plots. 
-- Provide interpretable visualizations showing feature importance. 
+## 💾 Objectif d’optimisation mémoire
+- Implémenter `optimize_memory(df)` pour réduire l’empreinte mémoire du dataframe en convertissant les types de données.
+- Montrer l’amélioration de la mémoire avant/après optimisation dans le notebook.
 
-## 🖥️ Interface Development Objectives
-- Build a Streamlit or Flask interface for clinicians. 
-- Allow input of symptoms, demographic, and clinical data. 
-- Display predictions and SHAP results in a clear way.
+## 🧠 Objectifs d’explicabilité SHAP
+- Générer des graphiques de résumé SHAP.
+- Fournir des visualisations interprétables montrant l’importance des variables.
 
-## 🧪 Software Engineering Objectives
-- Create a professional GitHub repository (no forks).
-- Include at least one automated test (e.g., missing values, memory optimization, model prediction).
-- Automate tests using GitHub Actions CI workflow.
-## 🗂️ Task Distribution Objectives
-- Use Jira to manage tasks: To Do, In Progress, Review, Done.
+## 🖥️ Objectifs de développement de l’interface
+- Construire une interface Streamlit ou Flask pour les cliniciens.
+- Permettre la saisie des symptômes, des données démographiques et des données cliniques.
+- Afficher les prédictions et les résultats SHAP de manière claire.
 
-## 🧩 Prompt Engineering Documentation
-- Document prompts used for at least one core task and explain their effectiveness.
+## 🧪 Objectifs d’ingénierie logicielle
+- Créer un dépôt GitHub professionnel (pas de fork).
+- Inclure au moins un test automatisé (par exemple : valeurs manquantes, optimisation mémoire, prédiction du modèle).
+- Automatiser les tests avec un workflow CI GitHub Actions.
 
+## 🗂️ Objectifs de répartition des tâches
+- Utiliser Jira pour gérer les tâches : To Do, In Progress, Review, Done.
 
+## 🧩 Documentation du Prompt Engineering
+- Documenter les prompts utilisés pour au moins une tâche principale et expliquer leur efficacité.
 
+---
 
-## Repository Structure
+# Repository Structure
+
 ```
 projet5-codingweek/
 │
@@ -83,17 +86,17 @@ projet5-codingweek/
 │
 ├── tests/
 │   ├── test_sample.py
-│   └── test_data_processing.py
+│   ├── test_data_processing.py
 │   └── test_inference.py
 │
 ├── data/
 │   ├── raw/
-|   |    ├── US_Pictures/
-│   |    │   └──  B-mode ultrasound images named as subject #>.<view #> *.bmp
-│   |    ├── app_data.xlsx  tabular data with 53 features and 782 Instances 
-│   |    ├── regensburg_pediatric_appendicitis.csv derived from app_data.xlsx
-│   |    ├── multiple_in_one: a list of US image names containing multiple snapshots
-|   |   
+│   │   ├── US_Pictures/
+│   │   │   └── B-mode ultrasound images named as subject #>.<view #> *.bmp
+│   │   ├── app_data.xlsx  tabular data with 53 features and 782 Instances
+│   │   ├── regensburg_pediatric_appendicitis.csv derived from app_data.xlsx
+│   │   ├── multiple_in_one: a list of US image names containing multiple snapshots
+│   │
 │   └── processed/
 │       └── (sorties prétraitées)
 │
@@ -102,171 +105,234 @@ projet5-codingweek/
 │
 └── reports/
     └── (graphs, SHAP visuals, results.json)
-``` 
-## 🚀 How to Run the Project
-### 1.Clone the repository with Github Desktop
-Open GitHub Desktop
-Click File → Clone repository: the `projet5-coding-week` repo
+```
+
+---
+
+# 🚀 How to Run the Project
+
+## 1. Clone the repository with GitHub Desktop
+Open GitHub Desktop  
+Click **File → Clone repository** : the `projet5-coding-week` repo  
 Choose a location on your computer
 
-###  <p id="install-dependencies"> 2. Install Dependencies</p>
-Before running any code, create and activate a virtual environment:
+---
 
-#### Windows (Git Bash)
+## 2. Install Dependencies
+
+Before running any code, create and activate a virtual environment.
+
+### Windows (Git Bash)
+
 ```bash
 python -m venv .venv
 source .venv/Scripts/activate
 ```
-You shoukd see (.venv) up to your current director
 
-#### MacOS / Linux
-``` shell 
+You should see **(.venv)** before your current directory.
+
+### MacOS / Linux
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Then install the required packages(Git Bash in windows/ terminal in MacOS / Linux):
-``` bash
+Then install the required packages:
+
+```bash
 pip install -r requirements.txt
 ```
-### 3. Train the Model
+
+---
+
+## 3. Train the Model
+
 To train the machine learning model, make sure the dataset is placed in:
-``` 
+
+```
 data/raw/<your_dataset>.csv
 ```
-replace `<your_dataset>.csv` with the file name of the dataset 
 
-#### 1. Place the Dataset in the Correct Folder
-Download the dataset from UCI (as required in the project instructions):
-<a href="https://archive.ics.uci.edu/dataset/938/regensburg+pediatric+appendicitis" target="_blank">dataset</a>
-Then put the `dataset` inside: `projet5-codingweek/data/raw/`
+Replace `<your_dataset>.csv` with the dataset file name.
+
+### 1. Place the Dataset in the Correct Folder
+
+Download the dataset from UCI:
+
+https://archive.ics.uci.edu/dataset/938/regensburg+pediatric+appendicitis
+
+Then put the dataset inside:
+
+```
+projet5-codingweek/data/raw/
+```
 
 Example:
+
+```
 projet5-codingweek/data/raw/regensburg_pediatric_appendicitis.csv
+```
 
+---
 
-#### 2. Activate Your Virtual Environment
+### 2. Activate Your Virtual Environment
+
 Windows + Git Bash:
+
 ```bash
 source .venv/Scripts/activate
 ```
 
 Mac/Linux:
-```shell
+
+```bash
 source .venv/bin/activate
 ```
 
-confirm it work:
-``` shell
+Confirm it works:
+
+```bash
 which python
 ```
-#### 3. Install dependencies if not
 
-[see this scope](#install-dependencies)
-#### 4. Run the Training Script
-Use this command (replace the CSV name if yours is different):
-``` shell
+---
+
+### 3. Install dependencies if needed
+
+See section **Install Dependencies**
+
+---
+
+### 4. Run the Training Script
+
+```bash
 python src/train_model.py \
   --input data/raw/regensburg_pediatric_appendicitis.csv \
   --target appendicitis \
   --out models/best_model.pkl
 ```
 
+---
 
-### 5. What Happens Internally When You Train
-Your train_model.py script performs these steps automatically:
-1. Load the dataset
-It validates that the file exists and loads it into a Pandas DataFrame. (Code in the file you created.)
-2. Preprocess the features
-Using your preprocess_pipeline() function:
+# 5. What Happens Internally When You Train
 
-missing values handling
-outlier clipping
-one‑hot encoding
-memory optimization (required by the project)
+Your `train_model.py` script performs these steps automatically.
 
-3. Split the dataset
-```shell
+### 1. Load the dataset
+Validates that the file exists and loads it into a Pandas DataFrame.
+
+### 2. Preprocess the features
+
+Using `preprocess_pipeline()`:
+
+- missing values handling
+- outlier clipping
+- one-hot encoding
+- memory optimization (required by the project)
+
+### 3. Split the dataset
+
+```python
 train_test_split(..., test_size=0.2, stratify=y)
-``` 
-4. Train at least 3 models
-As required by the project guidelines:
+```
+
+### 4. Train at least 3 models
+
 - SVM
 - Random Forest
 - LightGBM (if installed)
 - CatBoost (optional)
 
-The training script compares models using:
+Evaluation metrics:
 
-ROC‑AUC
-Accuracy
-Precision
-Recall
-F1‑Score1
+- ROC-AUC
+- Accuracy
+- Precision
+- Recall
+- F1-score
 
-5. Select the best model
+### 5. Select the best model
+
 Based on:
 
-- ROC‑AUC (priority)
+- ROC-AUC (priority)
 - F1-score (fallback)
 
-6. Save outputs
-The script saves:
+### 6. Save outputs
 
 | File | Location | Description |
-|------|----------|-------------|
+|-----|-----|-----|
 | Final model | `models/best_model.pkl` | Used by Streamlit app |
 | Feature schema | `models/feature_schema.json` | Ensures app input columns match training columns |
 | Evaluation metrics | `reports/results.json` | Required for documentation |
 
-🎉 6. How to Verify Training Succeeded
+---
+
+# 🎉 6. How to Verify Training Succeeded
+
 You should see messages like:
+
 ```
 Training complete. Best model: random_forest
 Metrics: {...}
 ```
+
 And the following files will be created:
+
 ```
 models/best_model.pkl
 models/feature_schema.json
 reports/results.json
 ```
 
-### 6. Run the Streamlit App
-After training, you can run the Streamlit app to input patient data and see predictions:
-``` shell 
+---
+
+# 7. Run the Streamlit App
+
+```bash
 streamlit run app/app.py
 ```
+
 This runs the web interface required by the project:
 
 - clinician inputs
 - predictions
-- SHAP visualizations 
+- SHAP visualizations
 
+---
 
 # Data Processing Module (`src/data_processing.py`)
 
 Ce module contient toutes les étapes de prétraitement exigées par le projet.
 
 ## 1. Outliers — `handle_outliers(df)`
-Traite les valeurs extrêmes avec la méthode IQR (±1.5 × IQR) puis remplace les outliers par la médiane.
+Traite les valeurs extrêmes avec la méthode **IQR (±1.5 × IQR)** puis remplace les outliers par la médiane.
 
 ## 2. Encodage — `encode_features(df)`
-Transforme toutes les colonnes catégorielles en variables numériques via one-hot encoding.
+Transforme toutes les colonnes catégorielles en variables numériques via **one-hot encoding**.
 
 ## 3. Valeurs manquantes — `handle_missing_values(df)`
-- Colonnes numériques → remplacées par la moyenne  
-- Colonnes catégorielles → remplacées par le mode  
+
+- Colonnes numériques → remplacées par la moyenne
+- Colonnes catégorielles → remplacées par le mode
 
 ## 4. Optimisation mémoire — `optimize_memory(df)`
+
 Exigence du projet :
-- downcasting des `int64` → `int32`/`int16`/`int8`
-- downcasting des `float64` → `float32`
-- conversion en `category` quand c’est pertinent
+
+- downcasting `int64` → `int32` / `int16` / `int8`
+- downcasting `float64` → `float32`
+- conversion en `category` lorsque pertinent
 
 Permet de réduire la taille du DataFrame et d'améliorer les performances.
 
 ## 5. Pipeline complet — `preprocess_pipeline(df)`
+
 Applique automatiquement toutes les étapes dans l’ordre :
-`outliers → encodage → missing values → optimisation mémoire`
-Retourne un DataFrame final prêt pour l’entraînement du modèle
+
+```
+outliers → encodage → missing values → optimisation mémoire
+```
+
+Retourne un DataFrame final prêt pour l’entraînement du modèle.
