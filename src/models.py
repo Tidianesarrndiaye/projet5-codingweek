@@ -8,17 +8,17 @@ def get_models():
         "svm_rbf": SVC(kernel="rbf", probability=True, class_weight=None, random_state=42),
         "rf": RandomForestClassifier(n_estimators=400, max_depth=None, n_jobs=-1, random_state=42),
         "lgbm": LGBMClassifier(
-n_estimators=600,
-    learning_rate=0.05,
-    num_leaves=63,
-    max_depth=-1,
-    min_data_in_leaf=20,
-    min_gain_to_split=0.0,
-    subsample=0.8,            # (alias bagging_fraction)
-    subsample_freq=1,         # (alias bagging_freq)
-    colsample_bytree=0.8,     # (alias feature_fraction)
-    random_state=42
-)
+            n_estimators=600,
+            learning_rate=0.05,
+            num_leaves=63,
+            max_depth=16,
+            min_child_samples=20,
+            subsample=0.8,
+            subsample_freq=1,
+            colsample_bytree=0.8,
+            random_state=42,
+            verbosity=-1,
+        )
         # "catboost": CatBoostClassifier(verbose=False, random_state=42)  # optionnel
     }
     return models

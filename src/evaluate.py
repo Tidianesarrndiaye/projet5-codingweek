@@ -13,7 +13,7 @@ def compute_metrics(y_true, y_prob, y_pred):
 
 def plot_roc_curves(roc_items, title="Courbes ROC"):
     # roc_items: list of tuples (name, y_true, y_prob)
+    plt.title(title)
     for name, y_true, y_prob in roc_items:
         RocCurveDisplay.from_predictions(y_true, y_prob, name=name)
-    plt.title(title)
-    plt.savefig("artifacts/roc_curves.png")
+        plt.savefig(f"artifacts/roc_curves_{name}.png")

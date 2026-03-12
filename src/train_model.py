@@ -1,5 +1,6 @@
 import sys
 import os
+import warnings
 
 # Ajouter le dossier parent (la racine du projet) au PYTHONPATH
 
@@ -10,7 +11,7 @@ import joblib
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
-from data_processing import optimize_memory, train_test_prepare
+from data_processing import train_test_prepare
 from models import get_models, get_param_grids
 from evaluate import compute_metrics, plot_roc_curves
 
@@ -18,8 +19,11 @@ DATA_PATH = "data/processed/features_and_target.csv"
 TARGET = "Diagnosis_no appendicitis"
 MODEL_DIR = "artifacts"
 
-import numpy as np
-import pandas as pd
+warnings.filterwarnings(
+    "ignore",
+    message="X does not have valid feature names, but LGBMClassifier was fitted with feature names",
+    category=UserWarning,
+)
 
 def report_low_variance(X, tol=1e-9):
     s = X.std(numeric_only=True)
@@ -43,29 +47,34 @@ def main():
     results = []
     roc_items = []
 
+
     for name, clf in models.items():
         pipe = Pipeline(steps=[("preproc", preproc), ("model", clf)])
         param_grid = grids.get(name, {})
-        if param_grid:
-            search = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1, scoring="roc_auc")
-            search.fit(X_train, y_train)
-            best_est = search.best_estimator_
-        else:
-            pipe.fit(X_train, y_train)
-            best_est = pipe
+        try:
+            if param_grid:
+                search = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1, scoring="roc_auc")
+                search.fit(X_train, y_train)
+                best_est = search.best_estimator_
+            else:
+                pipe.fit(X_train, y_train)
+                best_est = pipe
 
-        y_prob = best_est.predict_proba(X_test)[:, 1]
-        y_pred = (y_prob >= 0.5).astype(int)
+            y_prob = best_est.predict_proba(X_test)[:, 1]
+            y_pred = (y_prob >= 0.5).astype(int)
 
-        metrics = compute_metrics(y_test, y_prob, y_pred)
-        metrics["model"] = name
-        results.append(metrics)
+            metrics = compute_metrics(y_test, y_prob, y_pred)
+            metrics["model"] = name
+            results.append(metrics)
 
-        roc_items.append((name, y_test, y_prob))
+            roc_items.append((name, y_test, y_prob))
 
-        # Sauvegarde
-        os.makedirs(MODEL_DIR, exist_ok=True)
-        joblib.dump(best_est, f"{MODEL_DIR}/{name}.joblib")
+            # Sauvegarde
+            os.makedirs(MODEL_DIR, exist_ok=True)
+            joblib.dump(best_est, f"{MODEL_DIR}/{name}.joblib")
+        except Exception as e:
+            print(f"Erreur lors de l'entraînement du modèle '{name}': {e}")
+            continue
 
     # Affiche résultats
     res_df = pd.DataFrame(results).sort_values(by="roc_auc", ascending=False)
@@ -80,7 +89,4 @@ def main():
     best_model = joblib.load(f"{MODEL_DIR}/{best_name}.joblib")
     joblib.dump(best_model, f"{MODEL_DIR}/best_model.joblib")
 if __name__ == "__main__":
-    import os
-
-
     main()
