@@ -63,7 +63,7 @@ def main():
 
     # Sauvegarde du meilleur modèle
     best_name = res_df.iloc[0]["model"]
-    print(f"Best model: {best_name}")
+    print(f"Training completed. Best model: {best_name}")
     best_model = joblib.load(f"{MODEL_DIR}/{best_name}.joblib")
     joblib.dump(best_model, f"{MODEL_DIR}/best_model.joblib")
 if __name__ == "__main__":
