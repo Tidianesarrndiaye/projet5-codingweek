@@ -4,7 +4,11 @@ from __future__ import annotations
 from typing import Tuple, Dict, Any
 import numpy as np
 import pandas as pd
-
+from typing import Tuple
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
 
 def drop_high_missing_columns(
     df: pd.DataFrame,
@@ -97,31 +101,46 @@ def encode_features(
     return encoded, meta
 
 
+
+
 def optimize_memory(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Réduction de la mémoire:
-      - downcast int/float
-      - conversion object -> category si faible cardinalité
-    """
-    df_opt = df.copy()
+    # downcast int/float; convertir object -> category si cardinalité raisonnable
+    for col in df.select_dtypes(include=["int64","int32"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="integer")
+    for col in df.select_dtypes(include=["float64","float32"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="float")
+    for col in df.select_dtypes(include=["object"]).columns:
+        nunique = df[col].nunique(dropna=False)
+        if 1 < nunique < (0.5 * len(df)):  # heuristique
+            df[col] = df[col].astype("category")
+    return df
 
-    for col in df_opt.columns:
-        s = df_opt[col]
 
-        # Downcast numériques
-        if pd.api.types.is_integer_dtype(s):
-            df_opt[col] = pd.to_numeric(s, downcast="integer")
-        elif pd.api.types.is_float_dtype(s):
-            df_opt[col] = pd.to_numeric(s, downcast="float")
+def train_test_prepare(df: pd.DataFrame, target: str, test_size: float = 0.2, random_state: int = 42):
+    df = df.copy()
+    y = df[target].astype(int)
+    X = df.drop(columns=[target])
 
-        # Object -> Category si faible cardinalité
-        elif pd.api.types.is_object_dtype(s):
-            nunique = s.nunique(dropna=True)
-            total = len(s)
-            if total > 0 and 0 < nunique < 0.5 * total:
-                df_opt[col] = s.astype("category")
+    num_cols = X.select_dtypes(include=["int16","int32","int64","float16","float32","float64"]).columns.tolist()
+    cat_cols = X.select_dtypes(include=["object","category","bool"]).columns.tolist()
 
-    return df_opt
+    # Pipelines
+    num_pipe = Pipeline(steps=[
+        ("scaler", StandardScaler())
+    ])
+    cat_pipe = Pipeline(steps=[
+        ("ohe", OneHotEncoder(handle_unknown="ignore"))
+    ])
+
+    preproc = ColumnTransformer(
+        transformers=[
+            ("num", num_pipe, num_cols),
+            ("cat", cat_pipe, cat_cols)
+        ]
+    )
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=random_state)
+    return preproc, X_train, X_test, y_train, y_test
 
 
 def preprocess_pipeline(
