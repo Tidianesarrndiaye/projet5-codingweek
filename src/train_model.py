@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Ajouter le dossier parent (la racine du projet) au PYTHONPATH
+# Ajouter le dossier parent (la racine du projet) 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -87,7 +87,7 @@ def main():
     best_name, best_score = find_best_model(res_df)
     print(f"Training completed. Best model (by roc_auc): {best_name} (score: {best_score:.4f})")
     
-    # Option 2: Meilleur modèle selon f1
+    # Option 2: Meilleur modèle 
     # best_name, best_score = find_best_model(res_df, metric='f1')
     
     # Option 3: Meilleur modèle selon une combinaison de métriques
