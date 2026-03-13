@@ -9,3 +9,6 @@ reports/
 Thumbs.db
 .vscode/
 data\raw\~$app_data.xlsx
+~$app_data.xlsx
+data\processed\~$app_data_processed.xlsx
+~$app_data_processed.xlsx

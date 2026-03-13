@@ -1,6 +1,5 @@
 import sys
 import os
-import warnings
 
 # Ajouter le dossier parent (la racine du projet) au PYTHONPATH
 
@@ -10,10 +9,10 @@ import pandas as pd
 import joblib
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-
+import warnings
 from data_processing import train_test_prepare
 from models import get_models, get_param_grids
-from evaluate import compute_metrics, plot_roc_curves
+from evaluate import compute_metrics, plot_roc_curves, find_best_model
 
 DATA_PATH = "data/processed/features_and_target.csv"
 TARGET = "Diagnosis"
@@ -53,7 +52,7 @@ def main():
         param_grid = grids.get(name, {})
         try:
             if param_grid:
-                search = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1, scoring="roc_auc")
+                search = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1, scoring="roc_auc", verbose=0)
                 search.fit(X_train, y_train)
                 best_est = search.best_estimator_
             else:
@@ -84,8 +83,16 @@ def main():
     plot_roc_curves(roc_items)
 
     # Sauvegarde du meilleur modèle
-    best_name = res_df.iloc[0]["model"]
-    print(f"Training completed. Best model: {best_name}")
+    # Option 1: Meilleur modèle selon une seule métrique (roc_auc par défaut)
+    best_name, best_score = find_best_model(res_df)
+    print(f"Training completed. Best model (by roc_auc): {best_name} (score: {best_score:.4f})")
+    
+    # Option 2: Meilleur modèle selon f1
+    # best_name, best_score = find_best_model(res_df, metric='f1')
+    
+    # Option 3: Meilleur modèle selon une combinaison de métriques
+    # best_name, best_score = find_best_model(res_df, weights={'roc_auc': 0.4, 'f1': 0.3, 'accuracy': 0.3})
+    
     best_model = joblib.load(f"{MODEL_DIR}/{best_name}.joblib")
     joblib.dump(best_model, f"{MODEL_DIR}/best_model.joblib")
 if __name__ == "__main__":
