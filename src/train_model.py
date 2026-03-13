@@ -15,7 +15,7 @@ from models import get_models, get_param_grids
 from evaluate import compute_metrics, plot_roc_curves, find_best_model
 
 DATA_PATH = "data/processed/features_and_target.csv"
-TARGET = "Diagnosis_no appendicitis"
+TARGET = "Diagnosis"
 MODEL_DIR = "artifacts"
 
 warnings.filterwarnings(
