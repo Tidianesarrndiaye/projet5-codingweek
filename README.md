@@ -1,59 +1,13 @@
 # Projet 5 – Coding Week (Structure minimale)
 
-Ce dépôt contient la structure minimale demandée pour démarrer le projet.
+Présentation du Projet
+Ce projet s'inscrit dans le cadre du développement d'outils d'aide au diagnostic médical de pointe, en exploitant le jeu de données pédiatriques de Regensburg. Il mobilise des techniques avancées de Machine Learning et de Deep Learning pour assister les cliniciens dans l'identification de l'appendicite chez l'enfant. En combinant l'analyse de données biologiques et l'imagerie médicale, cette initiative cherche à apporter une réponse technologique fiable à un défi de santé publique complexe, où la rapidité de décision est cruciale.
 
-## Prochaines étapes
-1. Initialiser Git
-2. Créer le repo GitHub
-3. Ajouter requirements.txt
-4. Ajouter les premiers scripts et tests
-5. Télécharger le dataset et commencer l’EDA
+Description Technique
+Le cœur du projet repose sur une approche multimodale innovante qui traite simultanément deux types de flux d'informations. D'une part, une branche du modèle analyse les données tabulaires (résultats d'examens de sang, constantes cliniques, âge), préalablement nettoyées et normalisées. D'autre part, une branche spécialisée dans le traitement d'images (CNN) extrait les caractéristiques pertinentes des échographies abdominales. Ces deux sources sont ensuite fusionnées pour permettre au système de pondérer les signes cliniques et visuels avant de livrer une prédiction finale.
 
----
-
-# Objectifs du projet (Coding Week – Projet 5)
-
-Ce document résume tous les objectifs officiels du projet extraits du PDF de description du projet.
-
-## 🎯 Objectifs principaux du projet
-- Développer un modèle de machine learning robuste et explicable.
-- Garantir la transparence des prédictions grâce à l’explicabilité SHAP.
-- Créer une interface utilisateur intuitive (Streamlit ou Flask).
-- Suivre des pratiques professionnelles de développement logiciel (GitHub, automatisation CI/CD).
-- Démontrer l’utilisation du prompt engineering en documentant les prompts générés par l’IA et leurs résultats.
-
-## 📊 Objectifs d’analyse des données
-- Identifier les valeurs manquantes et décrire comment elles sont traitées.
-- Détecter les outliers et documenter la méthode de correction choisie.
-- Évaluer l’équilibre du dataset (~50/50 classes). Documenter toute technique d’équilibrage utilisée.
-- Analyser les corrélations et décrire comment les variables corrélées sont gérées.
-
-## 🤖 Objectifs de machine learning
-- Entraîner et évaluer au moins **trois** modèles parmi les suivants : SVM, Random Forest, LightGBM, CatBoost.
-- Utiliser ROC-AUC, accuracy, precision, recall et F1-score pour comparer les modèles.
-- Justifier le choix du modèle le plus performant.
-
-## 💾 Objectif d’optimisation mémoire
-- Implémenter `optimize_memory(df)` pour réduire l’empreinte mémoire du dataframe en convertissant les types de données.
-- Montrer l’amélioration de la mémoire avant/après optimisation dans le notebook.
-
-## 🧠 Objectifs d’explicabilité SHAP
-- Générer des graphiques de résumé SHAP.
-- Fournir des visualisations interprétables montrant l’importance des variables.
-
-## 🖥️ Objectifs de développement de l’interface
-- Construire une interface Streamlit ou Flask pour les cliniciens.
-- Permettre la saisie des symptômes, des données démographiques et des données cliniques.
-- Afficher les prédictions et les résultats SHAP de manière claire.
-
-## 🧪 Objectifs d’ingénierie logicielle
-- Créer un dépôt GitHub professionnel (pas de fork).
-- Inclure au moins un test automatisé (par exemple : valeurs manquantes, optimisation mémoire, prédiction du modèle).
-- Automatiser les tests avec un workflow CI GitHub Actions.
-
-## 🗂️ Objectifs de répartition des tâches
-- Utiliser Jira pour gérer les tâches : To Do, In Progress, Review, Done.
-
+Objectifs et Impact
+L'objectif principal est d'améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels, souvent sujets à une certaine variabilité. Le projet vise à minimiser les erreurs de diagnostic, réduisant ainsi le nombre d'interventions chirurgicales inutiles tout en garantissant une prise en charge rapide des cas critiques. À terme, l'ambition est de fournir un modèle robuste, capable de généraliser ses prédictions malgré des données parfois manquantes ou hétérogènes, afin d'offrir un support fiable aux équipes médicales en milieu hospitalier.
 ## 🧩 Documentation du Prompt Engineering
 - Documenter les prompts utilisés pour au moins une tâche principale et expliquer leur efficacité.
 
