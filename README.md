@@ -162,21 +162,45 @@ which python
 ```
 ## 3. Analyse exploratoire des données (EDA)
 
-### Valeurs manquantes
+### Valeurs manquantes — `handle_missing_values(df)`
 Nous avons analysé les valeurs manquantes et les avons traitées en utilisant :
-- imputation par la moyenne
-- imputation par la médiane
-- suppression des lignes incomplètes (selon la variable)
+- Colonnes numériques → remplacées par la moyenne
+- Colonnes catégorielles → remplacées par le mode
+
 
 ### Valeurs aberrantes
 Les valeurs aberrantes ont été détectées en utilisant :
 - des boxplots
 - la méthode IQR
 
+Transforme toutes les colonnes catégorielles en variables numériques via **one-hot encoding**.
+
+
+
+### Optimisation mémoire — `optimize_memory(df)`
+
+Exigence du projet :
+
+- downcasting `int64` → `int32` / `int16` / `int8`
+- downcasting `float64` → `float32`
+- conversion en `category` lorsque pertinent
+
+Permet de réduire la taille du DataFrame et d'améliorer les performances.
+
+## 5. Pipeline complet — `preprocess_pipeline(df)`
+
+Applique automatiquement toutes les étapes dans l’ordre :
+
+```
+outliers → encodage → missing values → optimisation mémoire
+```
+
+Retourne un DataFrame final prêt pour l’entraînement du modèle.
+
 ### Équilibre des classes
 Le jeu de données est approximativement équilibré :
-- ~50 % appendicite
-- ~50 % non-appendicite
+- ~60 % appendicite
+- ~40 % non-appendicite
 
 Par conséquent, aucune technique de suréchantillonnage n’a été appliquée.
 
@@ -244,31 +268,29 @@ Based on:
 | File | Location | Description |
 |-----|-----|-----|
 | Final model | `models/best_model.joblib` | Used by Streamlit app |
-| Feature schema | `models/feature_schema.json` | Ensures app input columns match training columns |
 | Evaluation metrics | `reports/results.json` | Required for documentation |
 
 ---
 
-# 🎉 6. How to Verify Training Succeeded
+## 🎉 6. How to Verify Training Succeeded
 
 You should see messages like:
 
 ```
-Training completed. Best model: random_forest
 Metrics: {...}
+Training completed. Best model: random_forest
 ```
 
 And the following files will be created:
 
 ```
 models/best_model.joblib
-models/feature_schema.json
 reports/results.json
 ```
 
 ---
 
-# 7. Run the Streamlit App
+## 7. Run the Streamlit App
 
 ```bash
 streamlit run app/app.py
@@ -276,43 +298,71 @@ streamlit run app/app.py
 
 This runs the web interface required by the project:
 
+- choose a model in the sidebar
 - clinician inputs
 - predictions
 - SHAP visualizations
 
 ---
 
-# Data Processing Module (`src/data_processing.py`)
 
-Ce module contient toutes les étapes de prétraitement exigées par le projet.
+## 5. Model Evaluation
 
-## 1. Outliers — `handle_outliers(df)`
-Traite les valeurs extrêmes avec la méthode **IQR (±1.5 × IQR)** puis remplace les outliers par la médiane.
+Evaluation metrics used:
 
-## 2. Encodage — `encode_features(df)`
-Transforme toutes les colonnes catégorielles en variables numériques via **one-hot encoding**.
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- ROC-AUC
 
-## 3. Valeurs manquantes — `handle_missing_values(df)`
+Results:
 
-- Colonnes numériques → remplacées par la moyenne
-- Colonnes catégorielles → remplacées par le mode
+| Model | Accuracy |precision | recall | f1| ROC-AUC |
+|------|------|------|
+| Random Forest | 0.847 | 0.8448 | 0.765 | 0.803 | 0.949 |
+| SVM | 0.828 | 0.930 | 0.625 |  0.747 | 0.937 |
+| LightGBM | 0.834 | 0.8064 | 0.781 |  0.93 | 0.932 |
 
-## 4. Optimisation mémoire — `optimize_memory(df)`
+## 6. Selected Model
 
-Exigence du projet :
+The best performing model was **Random Forest** due to:
 
-- downcasting `int64` → `int32` / `int16` / `int8`
-- downcasting `float64` → `float32`
-- conversion en `category` lorsque pertinent
+- higher ROC-AUC
+- stable performance
+- better interpretability
 
-Permet de réduire la taille du DataFrame et d'améliorer les performances.
+## 7. Explainability with SHAP
 
-## 5. Pipeline complet — `preprocess_pipeline(df)`
+We used SHAP values to explain predictions.
 
-Applique automatiquement toutes les étapes dans l’ordre :
+SHAP helps identify which features influence the model decision.
 
-```
-outliers → encodage → missing values → optimisation mémoire
-```
+Example:
+- high CRP → increases appendicitis probability
+- high leukocyte count → strong positive impact
 
-Retourne un DataFrame final prêt pour l’entraînement du modèle.
+## 8. Application Interface
+
+A user interface was built using:
+
+- Streamlit
+
+The interface allows doctors to input patient symptoms and receive:
+
+- predicted diagnosis
+- explanation of prediction
+
+## 9. Technologies Used
+
+- Python
+- Scikit-learn
+- lightgbm
+- SHAP
+- Pandas
+- Streamlit
+- GitHub
+
+## 10. Conclusion
+
+Machine learning models can assist physicians in diagnosing appendicitis while maintaining transparency through explainable AI techniques.
