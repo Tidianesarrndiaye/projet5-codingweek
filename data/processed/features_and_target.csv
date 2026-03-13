@@ -1,4 +1,4 @@
-WBC_Count,Management_primary surgical,Management_secondary surgical,Diagnosis_Presumptive_no appendicitis,Appendix_on_US_yes,Diagnosis_no appendicitis
+WBC_Count,Management_primary surgical,Management_secondary surgical,Diagnosis_Presumptive_no appendicitis,Appendix_on_US_yes,Diagnosis
 7.7,False,False,False,True,0
 8.1,False,False,False,False,1
 13.2,False,False,False,False,1

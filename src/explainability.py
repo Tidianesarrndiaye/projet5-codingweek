@@ -15,6 +15,34 @@ from typing import Union, Tuple, Optional
 from sklearn.pipeline import Pipeline
 
 
+def _strip_transformer_prefix(feature_name: str) -> str:
+    """Retire le préfixe de ColumnTransformer (ex: num__ / cat__)."""
+    if "__" in feature_name:
+        return feature_name.split("__", 1)[1]
+    return feature_name
+
+
+def _map_to_selected_feature(
+    transformed_name: str,
+    selected_features: Optional[list[str]]
+) -> str:
+    """
+    Mappe un nom transformé vers une feature clinique d'origine.
+
+    Pour OneHotEncoder, on associe des colonnes comme
+    `cat__FeatureA_valeur` à `FeatureA` si la correspondance existe.
+    """
+    clean_name = _strip_transformer_prefix(transformed_name)
+    if not selected_features:
+        return clean_name
+
+    # Trie par longueur décroissante pour éviter les collisions de préfixes.
+    for feat in sorted(selected_features, key=len, reverse=True):
+        if clean_name == feat or clean_name.startswith(f"{feat}_"):
+            return feat
+    return clean_name
+
+
 def create_shap_explainer(
     model: Union[Pipeline, object],
     X_background: pd.DataFrame,
@@ -115,7 +143,8 @@ def plot_shap_summary(
     X: pd.DataFrame,
     plot_type: str = "bar",
     max_display: int = 20,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    selected_features: Optional[list[str]] = None
 ) -> plt.Figure:
     """
     Crée un graphique de résumé SHAP montrant l'importance moyenne des features.
@@ -171,10 +200,20 @@ def plot_shap_summary(
         # Importance moyenne |SHAP|
         mean_abs = np.abs(vals).mean(axis=0)
 
-        n_display = min(max_display, len(mean_abs))
-        sorted_idx = np.argsort(mean_abs)[-n_display:]
-        sorted_vals = mean_abs[sorted_idx]
-        sorted_names = [feature_names[i] for i in sorted_idx]
+        # Agrège les colonnes transformées par nom de feature clinique unique.
+        aggregated: dict[str, float] = {}
+        for idx, importance in enumerate(mean_abs):
+            mapped_name = _map_to_selected_feature(feature_names[idx], selected_features)
+            aggregated[mapped_name] = aggregated.get(mapped_name, 0.0) + float(importance)
+
+        if not aggregated:
+            raise RuntimeError("Aucune importance SHAP calculable pour l'affichage.")
+
+        sorted_items = sorted(aggregated.items(), key=lambda kv: kv[1])
+        n_display = min(max_display, len(sorted_items))
+        top_items = sorted_items[-n_display:]
+        sorted_names = [name for name, _ in top_items]
+        sorted_vals = [value for _, value in top_items]
 
         fig, ax = plt.subplots(figsize=(8, max(3.5, n_display * 0.5)))
         ax.barh(range(n_display), sorted_vals, color="#e05c5c", alpha=0.85)
