@@ -1,12 +1,10 @@
-# Projet 5 – Coding Week (Structure minimale)
-
-Présentation du Projet
+🏥 I. Présentation du Projet
 Ce projet s'inscrit dans le cadre du développement d'outils d'aide au diagnostic médical de pointe, en exploitant le jeu de données pédiatriques de Regensburg. Il mobilise des techniques avancées de Machine Learning et de Deep Learning pour assister les cliniciens dans l'identification de l'appendicite chez l'enfant. En combinant l'analyse de données biologiques et l'imagerie médicale, cette initiative cherche à apporter une réponse technologique fiable à un défi de santé publique complexe, où la rapidité de décision est cruciale.
 
-Description Technique
+🧬 II. Description du Projet
 Le cœur du projet repose sur une approche multimodale innovante qui traite simultanément deux types de flux d'informations. D'une part, une branche du modèle analyse les données tabulaires (résultats d'examens de sang, constantes cliniques, âge), préalablement nettoyées et normalisées. D'autre part, une branche spécialisée dans le traitement d'images (CNN) extrait les caractéristiques pertinentes des échographies abdominales. Ces deux sources sont ensuite fusionnées pour permettre au système de pondérer les signes cliniques et visuels avant de livrer une prédiction finale.
 
-Objectifs et Impact
+🎯 III. Objectifs du Projet
 L'objectif principal est d'améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels, souvent sujets à une certaine variabilité. Le projet vise à minimiser les erreurs de diagnostic, réduisant ainsi le nombre d'interventions chirurgicales inutiles tout en garantissant une prise en charge rapide des cas critiques. À terme, l'ambition est de fournir un modèle robuste, capable de généraliser ses prédictions malgré des données parfois manquantes ou hétérogènes, afin d'offrir un support fiable aux équipes médicales en milieu hospitalier.
 ## 🧩 Documentation du Prompt Engineering
 - Documenter les prompts utilisés pour au moins une tâche principale et expliquer leur efficacité.
