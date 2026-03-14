@@ -5,7 +5,13 @@ Ce projet s'inscrit dans le cadre du développement d'outils d'aide au diagnosti
 Le cœur du projet repose sur une approche multimodale innovante qui traite simultanément deux types de flux d'informations. D'une part, une branche du modèle analyse les données tabulaires (résultats d'examens de sang, constantes cliniques, âge), préalablement nettoyées et normalisées. D'autre part, une branche spécialisée dans le traitement d'images (CNN) extrait les caractéristiques pertinentes des échographies abdominales. Ces deux sources sont ensuite fusionnées pour permettre au système de pondérer les signes cliniques et visuels avant de livrer une prédiction finale.
 
 # 🎯 III. Objectifs du Projet
-L'objectif principal est d'améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels, souvent sujets à une certaine variabilité. Le projet vise à minimiser les erreurs de diagnostic, réduisant ainsi le nombre d'interventions chirurgicales inutiles tout en garantissant une prise en charge rapide des cas critiques. À terme, l'ambition est de fournir un modèle robuste, capable de généraliser ses prédictions malgré des données parfois manquantes ou hétérogènes, afin d'offrir un support fiable aux équipes médicales en milieu hospitalier.
+- Améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels.
+- Réduire la variabilité liée aux méthodes d’évaluation classiques.
+- Minimiser les erreurs de diagnostic.
+- Diminuer le nombre d’interventions chirurgicales inutiles.
+- Assurer une prise en charge rapide et efficace des cas critiques.
+- Développer un modèle robuste capable de généraliser ses prédictions même avec des données manquantes ou hétérogènes.
+- Fournir un support fiable aux équipes médicales en milieu hospitalier.
 ## 🧩 Documentation du Prompt Engineering
 - Documenter les prompts utilisés pour au moins une tâche principale et expliquer leur efficacité.
 - Document prêt à rendre: [PROMPT_ENGINEERING.md](PROMPT_ENGINEERING.md)
