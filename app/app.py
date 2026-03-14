@@ -177,59 +177,145 @@ def prepare_model_input(_model, X_input: pd.DataFrame):
 
 
 def build_user_input() -> pd.DataFrame:
-    """Construit un DataFrame à partir des inputs utilisateur."""
+    """Construit un DataFrame à partir des inputs utilisateur (15 features)."""
     user_data = {}
-    
-    # Crée les champs d'entrée en colonnes
+
+    # ------------------------------------------------------------------
+    # Section 1 : Données démographiques et biologie
+    # ------------------------------------------------------------------
+    st.markdown("#### 🔬 Données biologiques et démographiques")
     col1, col2, col3 = st.columns(3)
-    
-    # Feature 1: WBC_Count
+
     with col1:
-        user_data['WBC_Count'] = st.number_input(
-            "🩸 Leucocytes (10^9/L)",
+        user_data['Age'] = st.number_input(
+            "🧒 Âge (années)",
+            min_value=0.0,
+            max_value=20.0,
+            value=11.4,
+            step=0.1,
+            help="Âge du patient en années"
+        )
+    with col2:
+        user_data['Appendix_Diameter'] = st.number_input(
+            "📏 Diamètre appendice (mm)",
             min_value=0.0,
             max_value=30.0,
-            value=8.0,
+            value=7.6,
             step=0.1,
-            help="Nombre de globules blancs"
+            help="Diamètre de l'appendice mesuré à l'échographie (mm)"
         )
-    
-    # Feature 2: Management_primary_surgical
-    with col2:
-        user_data['Management_primary surgical'] = st.checkbox(
-            "🏥 Gestion primaire chirurgicale",
-            value=False,
-            help="Intervention chirurgicale primaire réalisée"
-        )
-    
-    # Feature 3: Management_secondary_surgical
     with col3:
-        user_data['Management_secondary surgical'] = st.checkbox(
-            "🏥 Gestion secondaire chirurgicale",
-            value=False,
-            help="Intervention chirurgicale secondaire réalisée"
+        user_data['WBC_Count'] = st.number_input(
+            "🩸 Leucocytes (10⁹/L)",
+            min_value=0.0,
+            max_value=35.0,
+            value=11.9,
+            step=0.1,
+            help="Numération des globules blancs"
         )
-    
-    # Deuxième ligne
+
     col1, col2, col3 = st.columns(3)
-    
-    # Feature 4: Diagnosis_Presumptive_no appendicitis
+    with col1:
+        user_data['Segmented_Neutrophils'] = st.number_input(
+            "🔬 Neutrophiles segmentés (%)",
+            min_value=0.0,
+            max_value=100.0,
+            value=67.0,
+            step=1.0,
+            help="Pourcentage de neutrophiles segmentés"
+        )
+    with col2:
+        user_data['US_Number'] = st.number_input(
+            "🔢 Numéro d'examen US",
+            min_value=1.0,
+            max_value=1000.0,
+            value=408.0,
+            step=1.0,
+            help="Numéro séquentiel de l'examen échographique"
+        )
+
+    st.markdown("---")
+
+    # ------------------------------------------------------------------
+    # Section 2 : Prise en charge et diagnostic présomptif
+    # ------------------------------------------------------------------
+    st.markdown("#### 🏥 Prise en charge et diagnostic présomptif")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        user_data['Management_primary surgical'] = st.checkbox(
+            "🔪 Traitement chirurgical primaire",
+            value=False,
+            help="Intervention chirurgicale réalisée en première intention"
+        )
+    with col2:
+        user_data['Management_secondary surgical'] = st.checkbox(
+            "🔪 Traitement chirurgical secondaire",
+            value=False,
+            help="Intervention chirurgicale réalisée en deuxième intention"
+        )
+    with col3:
+        user_data['Diagnosis_Presumptive_appendicitis'] = st.checkbox(
+            "📋 Diagnostic présomptif : appendicite",
+            value=True,
+            help="Diagnostic clinique initial d'appendicite"
+        )
+
+    col1, col2, col3 = st.columns(3)
     with col1:
         user_data['Diagnosis_Presumptive_no appendicitis'] = st.checkbox(
-            "📋 Diagnostic présomptif (pas appendicite)",
+            "📋 Diagnostic présomptif : pas d'appendicite",
             value=False,
-            help="Diagnostic initial d'absence d'appendicite"
+            help="Diagnostic clinique initial d'absence d'appendicite"
         )
-    
-    # Feature 5: Appendix_on_US_yes
     with col2:
         user_data['Appendix_on_US_yes'] = st.checkbox(
             "🔍 Appendice visible à l'échographie",
-            value=False,
-            help="Appendice identifié à l'imagerie ultrasonore"
+            value=True,
+            help="Appendice identifié lors de l'examen échographique"
         )
-    
-    # Crée le DataFrame
+
+    st.markdown("---")
+
+    # ------------------------------------------------------------------
+    # Section 3 : Signes cliniques
+    # ------------------------------------------------------------------
+    st.markdown("#### 🩺 Signes cliniques")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        user_data['Contralateral_Rebound_Tenderness_yes'] = st.checkbox(
+            "↔️ Douleur rebond controlatérale",
+            value=False,
+            help="Douleur à la décompression du côté opposé à la fosse iliaque droite"
+        )
+    with col2:
+        user_data['Coughing_Pain_yes'] = st.checkbox(
+            "💨 Douleur à la toux",
+            value=False,
+            help="Douleur provoquée par la toux"
+        )
+    with col3:
+        user_data['Lymph_Nodes_Location_MB'] = st.checkbox(
+            "🔵 Ganglions mésentériques / bord mésentère",
+            value=False,
+            help="Présence de ganglions lymphatiques au niveau mésentérique"
+        )
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        user_data['Ileus_yes'] = st.checkbox(
+            "🚫 Iléus",
+            value=False,
+            help="Présence d'un iléus (occlusion intestinale fonctionnelle)"
+        )
+    with col2:
+        user_data['Coprostasis_yes'] = st.checkbox(
+            "💊 Coprostase",
+            value=True,
+            help="Présence de matières fécales dans le côlon (coprostase)"
+        )
+
     return pd.DataFrame([user_data])
 
 
@@ -316,7 +402,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📝 Données cliniques du patient")
 
 with st.container():
-    st.markdown("### 📋 Saisir les données cliniques du patient:")
+    st.markdown("### 📋 Saisir les données cliniques du patient (15 variables)")
     
     X_user = build_user_input()
 
@@ -325,59 +411,56 @@ if not expected_features:
 
 # ==================== PRÉDICTION ET INTERPRÉTABILITÉ ====================
 
-col_predict, col_explain = st.columns(2)
-
-with col_predict:
-    if st.button("🎯 Prédire", key="predict_button", use_container_width=True):
-        st.markdown("---")
-        
-        with st.spinner("⏳ Calcul en cours..."):
-            try:
-                X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
-                
-                # Prédiction
-                with warnings.catch_warnings():
-                    warnings.filterwarnings(
-                        "ignore",
-                        message=".*feature names.*"
-                    )
-                    if hasattr(model, "predict_proba"):
-                        prediction_proba = float(model.predict_proba(X_user_aligned)[0, 1])
-                    else:
-                        prediction_proba = float(model.predict(X_user_aligned)[0])
-                    prediction = int(prediction_proba >= 0.5)
-                
-                # Affichage du résultat
-                st.markdown("### 📊 Résultats de la prédiction")
-                
-                # Probabilité
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric(
-                        "Probabilité d'appendicite",
-                        f"{prediction_proba*100:.1f}%",
-                        delta=None
-                    )
-                
-                with col2:
-                    if prediction_proba > 0.7:
-                        risk_level = "🔴 ÉLEVÉE"
-                    elif prediction_proba > 0.3:
-                        risk_level = "🟡 MODÉRÉE"
-                    else:
-                        risk_level = "🟢 FAIBLE"
-                    st.markdown(f"#### Niveau de risque: {risk_level}")
-                
-                # Recommandation clinique
-                st.markdown("---")
-                if prediction == 1:
-                    st.success("✅ **Appendicite probable** - Recommandation: Consultation chirurgicale recommandée")
+if st.button("🎯 Prédire", key="predict_button", use_container_width=True):
+    st.markdown("---")
+    
+    with st.spinner("⏳ Calcul en cours..."):
+        try:
+            X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
+            
+            # Prédiction
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message=".*feature names.*"
+                )
+                if hasattr(model, "predict_proba"):
+                    prediction_proba = float(model.predict_proba(X_user_aligned)[0, 1])
                 else:
-                    st.info("ℹ️ **Appendicite improbable** - Recommandation: Surveillance clinique possible")
-                
-            except Exception as e:
-                st.error(f"❌ Erreur lors de la prédiction: {e}")
-                st.info("Vérifiez que toutes les données sont correctement saisies.")
+                    prediction_proba = float(model.predict(X_user_aligned)[0])
+                prediction = int(prediction_proba >= 0.5)
+            
+            # Affichage du résultat
+            st.markdown("### 📊 Résultats de la prédiction")
+            
+            # Probabilité
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    "Probabilité d'appendicite",
+                    f"{prediction_proba*100:.1f}%",
+                    delta=None
+                )
+            
+            with col2:
+                if prediction_proba > 0.7:
+                    risk_level = "🔴 ÉLEVÉE"
+                elif prediction_proba > 0.3:
+                    risk_level = "🟡 MODÉRÉE"
+                else:
+                    risk_level = "🟢 FAIBLE"
+                st.markdown(f"#### Niveau de risque: {risk_level}")
+            
+            # Recommandation clinique
+            st.markdown("---")
+            if prediction == 1:
+                st.success("✅ **Appendicite probable** - Recommandation: Consultation chirurgicale recommandée")
+            else:
+                st.info("ℹ️ **Appendicite improbable** - Recommandation: Surveillance clinique possible")
+            
+        except Exception as e:
+            st.error(f"❌ Erreur lors de la prédiction: {e}")
+            st.info("Vérifiez que toutes les données sont correctement saisies.")
 
 # ==================== EXPLICABILITÉ SHAP ====================
 
