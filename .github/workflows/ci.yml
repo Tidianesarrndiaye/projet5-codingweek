@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: .github/workflows/ci.yml
+          path: test-results.xml
 
       - name: Check if best_model.joblib exists
         run: |

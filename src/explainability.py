@@ -341,15 +341,27 @@ def get_feature_importance(
     try:
         # Si shap_values est une Explanation, utilise .base_values et .values
         if hasattr(shap_values, 'values'):
-            values = np.abs(shap_values.values)
+            values = np.asarray(shap_values.values)
         else:
-            values = np.abs(shap_values)
+            values = np.asarray(shap_values)
+
+        # Classification binaire/multiclasse: (n_samples, n_features, n_classes)
+        # -> on agrège sur les classes pour obtenir une importance par feature.
+        if values.ndim == 3:
+            values = np.abs(values).mean(axis=2)
+        else:
+            values = np.abs(values)
+
+        if values.ndim == 1:
+            values = values.reshape(1, -1)
         
         # Moyenne par feature
         mean_abs_shap = np.mean(values, axis=0)
         
         # Crée DataFrame
-        feature_names = shap_values.feature_names or [f"Feature {i}" for i in range(len(mean_abs_shap))]
+        feature_names = getattr(shap_values, "feature_names", None)
+        if feature_names is None:
+            feature_names = [f"Feature {i}" for i in range(len(mean_abs_shap))]
         importance_df = pd.DataFrame({
             'feature': feature_names,
             'mean_abs_shap_value': mean_abs_shap,
