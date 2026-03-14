@@ -21,7 +21,12 @@ from typing import Any
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 try:
-    from src.explainability import create_shap_explainer, explain_prediction, plot_shap_summary
+    from src.explainability import (
+        create_shap_explainer,
+        explain_prediction,
+        plot_shap_summary,
+        plot_shap_local_contributions,
+    )
     SHAP_AVAILABLE = True
 except ImportError:
     SHAP_AVAILABLE = False
@@ -177,7 +182,7 @@ def prepare_model_input(_model, X_input: pd.DataFrame):
 
 
 def build_user_input() -> pd.DataFrame:
-    """Construit un DataFrame à partir des inputs utilisateur (15 features)."""
+    """Construit un DataFrame à partir des inputs utilisateur."""
     user_data = {}
 
     # ------------------------------------------------------------------
@@ -255,20 +260,16 @@ def build_user_input() -> pd.DataFrame:
             help="Intervention chirurgicale réalisée en deuxième intention"
         )
     with col3:
-        user_data['Diagnosis_Presumptive_appendicitis'] = st.checkbox(
-            "📋 Diagnostic présomptif : appendicite",
-            value=True,
-            help="Diagnostic clinique initial d'appendicite"
+        presumptive_choice = st.radio(
+            "📋 Diagnostic présomptif",
+            options=["Appendicite", "Pas appendicite", "Indéterminé"],
+            index=0,
+            help="Sélection unique pour éviter les combinaisons incohérentes",
         )
+        user_data['Diagnosis_Presumptive_appendicitis'] = presumptive_choice == "Appendicite"
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        user_data['Diagnosis_Presumptive_no appendicitis'] = st.checkbox(
-            "📋 Diagnostic présomptif : pas d'appendicite",
-            value=False,
-            help="Diagnostic clinique initial d'absence d'appendicite"
-        )
-    with col2:
         user_data['Appendix_on_US_yes'] = st.checkbox(
             "🔍 Appendice visible à l'échographie",
             value=True,
@@ -402,7 +403,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📝 Données cliniques du patient")
 
 with st.container():
-    st.markdown("### 📋 Saisir les données cliniques du patient (15 variables)")
+    st.markdown("### 📋 Saisir les données cliniques du patient")
     
     X_user = build_user_input()
 
@@ -411,96 +412,96 @@ if not expected_features:
 
 # ==================== PRÉDICTION ET INTERPRÉTABILITÉ ====================
 
-if st.button("🎯 Prédire", key="predict_button", use_container_width=True):
+predict_clicked = st.button("🎯 Prédire", use_container_width=True)
+
+if predict_clicked:
     st.markdown("---")
-    
-    with st.spinner("⏳ Calcul en cours..."):
-        try:
-            X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
-            
-            # Prédiction
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore",
-                    message=".*feature names.*"
-                )
-                if hasattr(model, "predict_proba"):
-                    prediction_proba = float(model.predict_proba(X_user_aligned)[0, 1])
-                else:
-                    prediction_proba = float(model.predict(X_user_aligned)[0])
-                prediction = int(prediction_proba >= 0.5)
-            
-            # Affichage du résultat
-            st.markdown("### 📊 Résultats de la prédiction")
-            
-            # Probabilité
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric(
-                    "Probabilité d'appendicite",
-                    f"{prediction_proba*100:.1f}%",
-                    delta=None
-                )
-            
-            with col2:
-                if prediction_proba > 0.7:
-                    risk_level = "🔴 ÉLEVÉE"
-                elif prediction_proba > 0.3:
-                    risk_level = "🟡 MODÉRÉE"
-                else:
-                    risk_level = "🟢 FAIBLE"
-                st.markdown(f"#### Niveau de risque: {risk_level}")
-            
-            # Recommandation clinique
-            st.markdown("---")
-            if prediction == 1:
-                st.success("✅ **Appendicite probable** - Recommandation: Consultation chirurgicale recommandée")
+    st.markdown("### 📊 Résultats de la prédiction")
+
+    X_user_aligned = None
+    try:
+        X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*feature names.*")
+            if hasattr(model, "predict_proba"):
+                prediction_proba = float(model.predict_proba(X_user_aligned)[0, 1])
             else:
-                st.info("ℹ️ **Appendicite improbable** - Recommandation: Surveillance clinique possible")
-            
-        except Exception as e:
-            st.error(f"❌ Erreur lors de la prédiction: {e}")
-            st.info("Vérifiez que toutes les données sont correctement saisies.")
+                prediction_proba = float(model.predict(X_user_aligned)[0])
+            prediction = int(prediction_proba >= 0.5)
 
-# ==================== EXPLICABILITÉ SHAP ====================
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(
+                "Probabilité d'appendicite",
+                f"{prediction_proba*100:.1f}%",
+                delta=None
+            )
 
-with st.container():
-    st.markdown("---")
-    st.markdown("### 🧠 Explicabilité (SHAP - XAI)")
-    
-    if st.button("📈 Générer l'explication SHAP", key="shap_button", use_container_width=True):
+        with col2:
+            if prediction_proba > 0.7:
+                risk_level = "🔴 ÉLEVÉE"
+            elif prediction_proba > 0.3:
+                risk_level = "🟡 MODÉRÉE"
+            else:
+                risk_level = "🟢 FAIBLE"
+            st.markdown(f"#### Niveau de risque: {risk_level}")
+
+        st.markdown("---")
+        if prediction == 1:
+            st.success("✅ **Appendicite probable** - Recommandation: Consultation chirurgicale recommandée")
+        else:
+            st.info("ℹ️ **Appendicite improbable** - Recommandation: Surveillance clinique possible")
+
+    except Exception as e:
+        st.error(f"❌ Erreur lors de la prédiction: {e}")
+        st.info("Vérifiez que toutes les données sont correctement saisies.")
+
+    # ==================== EXPLICABILITÉ SHAP ====================
+    with st.container():
+        st.markdown("---")
+        st.markdown("### 🧠 Explicabilité (SHAP - XAI)")
+
         if not SHAP_AVAILABLE:
             st.warning("⚠️ SHAP n'est pas installé dans l'environnement actuel.")
         elif explainer is None:
             st.warning("⚠️ L'explainer SHAP n'est pas disponible.")
+        elif X_user_aligned is None:
+            st.info("ℹ️ Prédiction non disponible, SHAP non calculé.")
         else:
-            with st.spinner("⏳ Génération de l'explication..."):
+            try:
+                if hasattr(model, 'named_steps'):
+                    X_user_processed = prepare_model_input(model, X_user_aligned)
+                else:
+                    X_user_processed = X_user_aligned
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", message=".*feature names.*")
+                    shap_values, _ = explain_prediction(explainer, X_user_processed)
+
+                st.markdown("#### 📊 Importance des features (SHAP)")
+
+                # Pour une seule prédiction, un plot local signé est plus informatif.
                 try:
-                    X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
-                    if hasattr(model, 'named_steps'):
-                        X_user_processed = prepare_model_input(model, X_user_aligned)
-                    else:
-                        X_user_processed = X_user_aligned
-                    
-                    # Calcule les SHAP values
-                    with warnings.catch_warnings():
-                        warnings.filterwarnings("ignore", message=".*feature names.*")
-                        shap_values, _ = explain_prediction(explainer, X_user_processed)
-                    
-                    # Génère le graphique
-                    st.markdown("#### 📊 Importance des features (SHAP Bar Plot)")
-                    st.info(
-                        "Ce graphique montre comment chaque variable clinique contribue à la prédiction."
+                    fig = plot_shap_local_contributions(
+                        shap_values,
+                        X_user_processed,
+                        max_display=15,
+                        selected_features=expected_features,
                     )
-                    
-                    try:
-                        fig = plot_shap_summary(shap_values, X_user_processed, plot_type="bar")
-                        st.pyplot(fig, use_container_width=True)
-                    except Exception as e:
-                        st.warning(f"⚠️ Impossible d'afficher le graphique SHAP: {e}")
-                        
-                except Exception as e:
-                    st.error(f"❌ Erreur lors de la génération de l'explication: {e}")
+                    st.pyplot(fig, use_container_width=True)
+                except Exception:
+                    fig = plot_shap_summary(
+                        shap_values,
+                        X_user_processed,
+                        plot_type="bar",
+                        selected_features=expected_features,
+                    )
+                    st.pyplot(fig, use_container_width=True)
+            except Exception as e:
+                st.error(f"❌ Erreur lors de la génération de l'explication: {e}")
+else:
+    st.info("ℹ️ Ajustez les variables puis cliquez sur 'Prédire' pour lancer la prédiction et l'explication SHAP.")
 
 # ==================== FOOTER ====================
 
