@@ -15,6 +15,7 @@ import os
 import sys
 import warnings
 from datetime import datetime
+from typing import Any
 
 # Ajouter le dossier parent au sys.path pour importer src modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -51,6 +52,77 @@ def load_model(model_path: str):
         st.info("Assurez-vous d'exécuter d'abord: `python src/train_model.py`")
         st.stop()
     return joblib.load(model_path)
+
+
+def infer_target_column(df: pd.DataFrame) -> str | None:
+    """Détecte la colonne cible dans le CSV prétraité."""
+    candidates = [
+        "Diagnosis",
+        "Diagnosis_no appendicitis",
+        "Diagnosis_no_appendicitis",
+        "target",
+    ]
+    for col in candidates:
+        if col in df.columns:
+            return col
+
+    for col in df.columns:
+        low = col.lower()
+        if "diagnosis" in low and "presumptive" not in low:
+            return col
+    return None
+
+
+def compute_feature_defaults(df: pd.DataFrame) -> dict[str, Any]:
+    """Calcule une valeur par défaut stable pour chaque feature."""
+    defaults: dict[str, Any] = {}
+    for col in df.columns:
+        series = df[col]
+        non_null = series.dropna()
+
+        if non_null.empty:
+            defaults[col] = 0
+            continue
+
+        if pd.api.types.is_bool_dtype(series):
+            mode = non_null.mode(dropna=True)
+            defaults[col] = bool(mode.iloc[0]) if not mode.empty else bool(non_null.iloc[0])
+        elif pd.api.types.is_numeric_dtype(series):
+            defaults[col] = float(non_null.median())
+        else:
+            mode = non_null.mode(dropna=True)
+            defaults[col] = mode.iloc[0] if not mode.empty else non_null.iloc[0]
+    return defaults
+
+
+def get_expected_raw_features(_model, fallback_features: list[str]) -> list[str]:
+    """Retourne les colonnes brutes attendues par le pipeline de preprocessing."""
+    if hasattr(_model, "named_steps") and "preproc" in _model.named_steps:
+        preproc = _model.named_steps["preproc"]
+        if hasattr(preproc, "feature_names_in_"):
+            return list(preproc.feature_names_in_)
+    return fallback_features
+
+
+def align_input_to_model(
+    X_input: pd.DataFrame,
+    expected_features: list[str],
+    defaults: dict[str, Any],
+) -> pd.DataFrame:
+    """Complète et ordonne X_input pour matcher exactement les colonnes attendues."""
+    if not expected_features:
+        return X_input.copy()
+
+    row = {}
+    source = X_input.iloc[0].to_dict() if not X_input.empty else {}
+
+    for col in expected_features:
+        if col in source:
+            row[col] = source[col]
+        else:
+            row[col] = defaults.get(col, 0)
+
+    return pd.DataFrame([row], columns=expected_features)
 
 
 @st.cache_resource
@@ -219,10 +291,19 @@ except Exception as e:
 
 # Charger les données de background pour SHAP
 explainer = None
+feature_defaults: dict[str, Any] = {}
+expected_features: list[str] = []
 try:
-    X_background = pd.read_csv("data/processed/features_and_target.csv")
-    if 'Diagnosis_no appendicitis' in X_background.columns:
-        X_background = X_background.drop(columns=['Diagnosis_no appendicitis'])
+    background_df = pd.read_csv("data/processed/features_and_target.csv")
+    target_col = infer_target_column(background_df)
+
+    X_background = background_df.drop(columns=[target_col]) if target_col in background_df.columns else background_df.copy()
+    feature_defaults = compute_feature_defaults(X_background)
+    expected_features = get_expected_raw_features(model, list(X_background.columns))
+    X_background = X_background.reindex(columns=expected_features)
+
+    for col in X_background.columns:
+        X_background[col] = X_background[col].fillna(feature_defaults.get(col, 0))
     
     # Crée l'explainer
     explainer = create_explainer(model, X_background.iloc[:100])
@@ -239,6 +320,9 @@ with st.container():
     
     X_user = build_user_input()
 
+if not expected_features:
+    expected_features = list(X_user.columns)
+
 # ==================== PRÉDICTION ET INTERPRÉTABILITÉ ====================
 
 col_predict, col_explain = st.columns(2)
@@ -249,13 +333,7 @@ with col_predict:
         
         with st.spinner("⏳ Calcul en cours..."):
             try:
-                # Prépare les données pour le modèle
-                if hasattr(model, 'named_steps'):
-                    clf = model.named_steps['model']
-                    X_user_processed = prepare_model_input(model, X_user)
-                else:
-                    X_user_processed = X_user
-                    clf = model
+                X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
                 
                 # Prédiction
                 with warnings.catch_warnings():
@@ -263,8 +341,11 @@ with col_predict:
                         "ignore",
                         message=".*feature names.*"
                     )
-                    prediction_proba = clf.predict_proba(X_user_processed)[0, 1]
-                    prediction = int(clf.predict(X_user_processed)[0])
+                    if hasattr(model, "predict_proba"):
+                        prediction_proba = float(model.predict_proba(X_user_aligned)[0, 1])
+                    else:
+                        prediction_proba = float(model.predict(X_user_aligned)[0])
+                    prediction = int(prediction_proba >= 0.5)
                 
                 # Affichage du résultat
                 st.markdown("### 📊 Résultats de la prédiction")
@@ -312,11 +393,11 @@ with st.container():
         else:
             with st.spinner("⏳ Génération de l'explication..."):
                 try:
-                    # Prépare les données
+                    X_user_aligned = align_input_to_model(X_user, expected_features, feature_defaults)
                     if hasattr(model, 'named_steps'):
-                        X_user_processed = prepare_model_input(model, X_user)
+                        X_user_processed = prepare_model_input(model, X_user_aligned)
                     else:
-                        X_user_processed = X_user
+                        X_user_processed = X_user_aligned
                     
                     # Calcule les SHAP values
                     with warnings.catch_warnings():

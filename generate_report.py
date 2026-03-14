@@ -37,7 +37,7 @@ try:
     print("\n3️⃣ Préparation des données...")
     from src.data_processing import train_test_prepare
     
-    TARGET_COL = "Diagnosis_no appendicitis"
+    TARGET_COL = "Diagnosis"
     preproc, X_train, X_test, y_train, y_test = train_test_prepare(df, target=TARGET_COL)
     
     X_train_proc = preproc.fit_transform(X_train)

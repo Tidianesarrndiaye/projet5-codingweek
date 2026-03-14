@@ -10,6 +10,7 @@ Objectifs et Impact
 L'objectif principal est d'améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels, souvent sujets à une certaine variabilité. Le projet vise à minimiser les erreurs de diagnostic, réduisant ainsi le nombre d'interventions chirurgicales inutiles tout en garantissant une prise en charge rapide des cas critiques. À terme, l'ambition est de fournir un modèle robuste, capable de généraliser ses prédictions malgré des données parfois manquantes ou hétérogènes, afin d'offrir un support fiable aux équipes médicales en milieu hospitalier.
 ## 🧩 Documentation du Prompt Engineering
 - Documenter les prompts utilisés pour au moins une tâche principale et expliquer leur efficacité.
+- Document prêt à rendre: [PROMPT_ENGINEERING.md](PROMPT_ENGINEERING.md)
 
 ---
 
@@ -116,9 +117,19 @@ which python
 ```
 ## 3. Analyse exploratoire des données (EDA)
 
+### Workflow leakage-safe
+L'ordre de préparation a été corrigé pour éviter la fuite de données :
+- définition de la cible `Diagnosis` et retrait des colonnes à exclure
+- split train/test stratifié
+- prétraitement ajusté sur le train uniquement
+- sélection de features sur le train prétraité
+- application des mêmes transformations au test
+
+Le notebook [notebooks/eda.ipynb](notebooks/eda.ipynb) exporte désormais un dataset tabulaire leakage-safe de `780` lignes et `16` colonnes : `15` features sélectionnées + la cible `Diagnosis`.
+
 ### Valeurs manquantes — `handle_missing_values(df)`
 Nous avons analysé les valeurs manquantes et les avons traitées en utilisant :
-- Colonnes numériques → remplacées par la moyenne
+- Colonnes numériques → remplacées par la médiane
 - Colonnes catégorielles → remplacées par le mode
 
 
@@ -143,10 +154,10 @@ Permet de réduire la taille du DataFrame et d'améliorer les performances.
 
 ## 5. Pipeline complet — `preprocess_pipeline(df)`
 
-Applique automatiquement toutes les étapes dans l’ordre :
+Applique automatiquement toutes les étapes de prétraitement :
 
 ```
-outliers → encodage → missing values → optimisation mémoire
+missing values → outliers → encodage → optimisation mémoire
 ```
 
 Retourne un DataFrame final prêt pour l’entraînement du modèle.
@@ -165,11 +176,10 @@ Une matrice de corrélation a été utilisée pour identifier les variables fort
 ## 4. Run the Training Script
 
 ```bash
-python src/train_model.py \
-  --input data/processed/features_and_target.csv
-  --target diagnosis_no appendicitis \
-  --out models/best_model.joblib
+python src/train_model.py
 ```
+
+Le script entraîne actuellement les modèles sur `data/processed/features_and_target.csv` avec la cible `Diagnosis`.
 
 ---
 
@@ -180,22 +190,17 @@ Your `train_model.py` script performs these steps automatically.
 ### 1. Load the dataset
 Validates that the file exists and loads it into a Pandas DataFrame.
 
-### 2. Preprocess the features
-
-Using `preprocess_pipeline()`:
-
-- missing values handling
-- outlier clipping
-- one-hot encoding
-- memory optimization (required by the project)
-
-### 3. Split the dataset
+### 2. Split the dataset
 
 ```python
 train_test_split(..., test_size=0.2, stratify=y)
 ```
 
-### 4. Train at least 3 models
+### 3. Fit preprocessing on the training data
+
+Le préprocessing est porté par un `Pipeline` sklearn et n'est ajusté que sur `X_train` au moment du `fit()`.
+
+### 4. Train 3 models
 
 - SVM
 - Random Forest
@@ -221,30 +226,53 @@ Based on:
 
 | File | Location | Description |
 |-----|-----|-----|
-| Final model | `models/best_model.joblib` | Used by Streamlit app |
-| Evaluation metrics | `reports/results.json` | Required for documentation |
+| Final model | `artifacts/best_model.joblib` | Used by Streamlit app |
+| Model artifacts | `artifacts/*.joblib` | Saved estimators |
+| ROC plots | `artifacts/roc_curves_*.png` | ROC curves by model |
 
 ---
 
-## 🎉 6. How to Verify Training Succeeded
+## 6. Résultats actuels
+
+Dataset utilisé après sélection de features :
+- `780` patients
+- `15` features retenues
+- cible `Diagnosis`
+- répartition des classes : `463` appendicites, `317` non-appendicites
+
+Résultats obtenus avec `python src/train_model.py` :
+
+| Modèle | Accuracy | Precision | Recall | F1 | ROC-AUC |
+|-----|-----:|-----:|-----:|-----:|-----:|
+| `svm_rbf` | `0.9359` | `0.9462` | `0.9462` | `0.9462` | `0.9904` |
+| `lgbm` | `0.9487` | `0.9474` | `0.9677` | `0.9574` | `0.9898` |
+| `rf` | `0.9551` | `0.9574` | `0.9677` | `0.9626` | `0.9853` |
+
+Le meilleur modèle selon le critère principal `roc_auc` est actuellement `svm_rbf` avec un score de `0.9904`.
+
+---
+
+## 🎉 7. How to Verify Training Succeeded
 
 You should see messages like:
 
 ```
 Metrics: {...}
-Training completed. Best model: random_forest
+Training completed. Best model (by roc_auc): svm_rbf
 ```
 
 And the following files will be created:
 
 ```
-models/best_model.joblib
-reports/results.json
+artifacts/best_model.joblib
+artifacts/rf.joblib
+artifacts/svm_rbf.joblib
+artifacts/lgbm.joblib
 ```
 
 ---
 
-## 7. Run the Streamlit App
+## 8. Run the Streamlit App
 
 ```bash
 streamlit run app/app.py
@@ -258,39 +286,6 @@ This runs the web interface required by the project:
 - SHAP visualizations
 
 ---
-
-
-## 5. Model Evaluation
-
-Evaluation metrics used:
-
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- ROC-AUC
-
-Results:
-
-| Model | Accuracy |precision | recall | f1| ROC-AUC |
-|------|------|------|
-| Random Forest | 0.847 | 0.8448 | 0.765 | 0.803 | 0.949 |
-| SVM | 0.828 | 0.930 | 0.625 |  0.747 | 0.937 |
-| LightGBM | 0.834 | 0.8064 | 0.781 |  0.93 | 0.932 |
-
-## 6. Selected Model
-
-The best performing model was **Random Forest** due to:
-
-- higher ROC-AUC
-- stable performance
-- better interpretability
-
-## 7. Explainability with SHAP
-
-We used SHAP values to explain predictions.
-
-SHAP helps identify which features influence the model decision.
 
 Example:
 - high CRP → increases appendicitis probability

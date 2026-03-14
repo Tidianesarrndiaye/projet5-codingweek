@@ -32,7 +32,27 @@ def report_low_variance(X, tol=1e-9):
 # Exemple après ton preprocess:
 
 def main():
-    print()
+    """
+    Main function to train and evaluate multiple machine learning models on a dataset.
+    Workflow:
+    1. Loads the dataset from DATA_PATH.
+    2. Prepares the data using train_test_prepare, including preprocessing and train/test split.
+    3. Identifies low variance columns.
+    4. Iterates over a set of models and their parameter grids:
+        - For each model, creates a pipeline with preprocessing and the model.
+        - If a parameter grid exists, performs GridSearchCV for hyperparameter tuning.
+        - Fits the model and evaluates it on the test set.
+        - Computes and stores evaluation metrics.
+        - Saves the trained model to disk.
+    5. Displays a summary of results sorted by ROC AUC.
+    6. Plots ROC curves for all models.
+    7. Identifies and saves the best model based on ROC AUC (or other metrics if desired).
+    Exceptions:
+    - Handles missing data files and training errors gracefully.
+    Returns:
+        None
+    """
+    print("Training started...")
     try:
         df = pd.read_csv(DATA_PATH)    
     except FileNotFoundError:
@@ -40,7 +60,7 @@ def main():
         return
     preproc, X_train, X_test, y_train, y_test = train_test_prepare(df, target=TARGET)
     low_var_cols = report_low_variance(X_train)
-    print("Colonnes variance ~0:", low_var_cols[:20])
+    # print("Colonnes variance ~0:", low_var_cols[:20])
     models = get_models()
     grids = get_param_grids()
     results = []
