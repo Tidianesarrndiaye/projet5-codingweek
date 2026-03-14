@@ -15,6 +15,12 @@ from typing import Union, Tuple, Optional
 from sklearn.pipeline import Pipeline
 
 
+CLINICAL_FEATURE_GROUPS = {
+    "Diagnosis_Presumptive_appendicitis": "Diagnosis_Presumptive",
+    "Diagnosis_Presumptive_no appendicitis": "Diagnosis_Presumptive",
+}
+
+
 def _strip_transformer_prefix(feature_name: str) -> str:
     """Retire le préfixe de ColumnTransformer (ex: num__ / cat__)."""
     if "__" in feature_name:
@@ -39,8 +45,8 @@ def _map_to_selected_feature(
     # Trie par longueur décroissante pour éviter les collisions de préfixes.
     for feat in sorted(selected_features, key=len, reverse=True):
         if clean_name == feat or clean_name.startswith(f"{feat}_"):
-            return feat
-    return clean_name
+            return CLINICAL_FEATURE_GROUPS.get(feat, feat)
+    return CLINICAL_FEATURE_GROUPS.get(clean_name, clean_name)
 
 
 def create_shap_explainer(
@@ -231,6 +237,74 @@ def plot_shap_summary(
         return fig
     except Exception as e:
         raise RuntimeError(f"Erreur lors de la création du graphique SHAP: {e}")
+
+
+def plot_shap_local_contributions(
+    shap_values: shap.Explanation,
+    X: pd.DataFrame,
+    max_display: int = 15,
+    selected_features: Optional[list[str]] = None,
+    save_path: Optional[str] = None,
+) -> plt.Figure:
+    """Affiche les contributions SHAP locales (signées) pour une instance."""
+    try:
+        if hasattr(shap_values, "values"):
+            vals = np.asarray(shap_values.values)
+            if hasattr(shap_values, "feature_names") and shap_values.feature_names is not None:
+                feature_names = list(shap_values.feature_names)
+            elif isinstance(X, pd.DataFrame):
+                feature_names = list(X.columns)
+            else:
+                n_feats = vals.shape[1] if vals.ndim >= 2 else vals.shape[0]
+                feature_names = [f"Feature {i}" for i in range(n_feats)]
+        else:
+            vals = np.asarray(shap_values)
+            feature_names = list(X.columns) if isinstance(X, pd.DataFrame) else [
+                f"Feature {i}" for i in range(vals.shape[-1])
+            ]
+
+        # Classification binaire : shape (n_samples, n_features, 2) -> classe 1
+        if vals.ndim == 3:
+            vals = vals[:, :, 1]
+
+        # On affiche une explication locale d'une seule observation.
+        if vals.ndim == 2:
+            vals = vals[0]
+        elif vals.ndim != 1:
+            vals = vals.reshape(-1)
+
+        aggregated: dict[str, float] = {}
+        for idx, contribution in enumerate(vals):
+            mapped_name = _map_to_selected_feature(feature_names[idx], selected_features)
+            aggregated[mapped_name] = aggregated.get(mapped_name, 0.0) + float(contribution)
+
+        if not aggregated:
+            raise RuntimeError("Aucune contribution SHAP locale disponible.")
+
+        ordered = sorted(aggregated.items(), key=lambda kv: abs(kv[1]))
+        n_display = min(max_display, len(ordered))
+        top_items = ordered[-n_display:]
+        names = [name for name, _ in top_items]
+        values = [value for _, value in top_items]
+        colors = ["#2e8b57" if v >= 0 else "#c94c4c" for v in values]
+
+        fig, ax = plt.subplots(figsize=(8, max(3.5, n_display * 0.5)))
+        ax.barh(range(n_display), values, color=colors, alpha=0.9)
+        ax.axvline(0.0, color="#444", linewidth=1)
+        ax.set_yticks(range(n_display))
+        ax.set_yticklabels(names, fontsize=10)
+        ax.set_xlabel("Contribution SHAP (signée)", fontsize=11)
+        ax.set_title("Contributions locales des variables (SHAP)", fontsize=13)
+        ax.margins(y=0.05)
+        plt.tight_layout()
+
+        if save_path:
+            fig.savefig(save_path, dpi=100, bbox_inches="tight")
+            print(f"✅ Graphique SHAP local sauvegardé: {save_path}")
+
+        return fig
+    except Exception as e:
+        raise RuntimeError(f"Erreur lors de la création du graphique SHAP local: {e}")
 
 
 def plot_shap_waterfall(

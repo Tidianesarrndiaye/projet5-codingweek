@@ -1,10 +1,17 @@
-# src/data_processing.py
+"""Data preparation utilities for training and EDA.
+
+Notes:
+- `train_test_prepare` is the production path used by model training.
+- `fit_preprocessor_on_train` / `transform_with_train_preprocessor` are
+    leakage-safe helpers used in the EDA notebook export workflow.
+- `encode_features` / `preprocess_pipeline` are kept as lightweight legacy
+    helpers for tests and quick experiments.
+"""
 
 from __future__ import annotations
 from typing import Tuple, Dict, Any
 import numpy as np
 import pandas as pd
-from typing import Tuple
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -129,7 +136,7 @@ def train_test_prepare(df: pd.DataFrame, target: str, test_size: float = 0.2, ra
         ("scaler", StandardScaler())
     ])
     cat_pipe = Pipeline(steps=[
-        ("ohe", OneHotEncoder(handle_unknown="ignore"))
+        ("ohe", OneHotEncoder(handle_unknown="ignore", drop="if_binary"))
     ])
 
     preproc = ColumnTransformer(
