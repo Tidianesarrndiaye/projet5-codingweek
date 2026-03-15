@@ -68,82 +68,19 @@ projet5-codingweek/
 
 ---
 
-# 🚀 How to Run the Project
+#DATA_PROCESSING
+🏥 Analyse du Processus de Préparation des Données
+Nature et Structure du Jeu de Données
+Pour ce projet, nous travaillons sur le dataset de Regensburg, qui compile des dossiers médicaux de patients pédiatriques suspectés d'appendicite. Le fichier source se présente sous la forme d'un tableau complexe regroupant des données hétérogènes : des informations démographiques (âge, sexe), des mesures cliniques (température, douleur) et, surtout, des analyses biologiques détaillées (taux de CRP, numération globulaire comme les leucocytes ou neutrophiles). Ces données présentent deux défis majeurs : une forte proportion de valeurs manquantes (certains tests n'ayant pas été effectués pour tous les patients) et une grande disparité d'échelles entre les variables, rendant indispensable un nettoyage approfondi avant toute phase d'apprentissage.
 
-## 1. Clone the repository with GitHub Desktop
-Open GitHub Desktop  
-Click **File → Clone repository** : the `projet5-coding-week` repo  
-Choose a location on your computer
+Stratégie de Traitement et de Nettoyage
+Nous avons mis en place un pipeline de traitement rigoureux pour transformer ces relevés bruts en données exploitables par nos algorithmes de Machine Learning. Dans un premier temps, nous procédons à l'élimination des colonnes trop incomplètes qui pourraient fausser les prédictions. Ensuite, nous appliquons une stratégie d'imputation systématique : pour les variables numériques, nous privilégions la médiane afin de limiter l'influence des valeurs extrêmes, tandis que pour les variables catégorielles, nous utilisons le mode. Cette étape est cruciale pour conserver l'intégrité du dataset tout en offrant au modèle une vue complète de chaque patient.
 
----
+Gestion des Valeurs Aberrantes et Normalisation
+Le contexte médical pédiatrique implique souvent des variations physiologiques importantes. Pour traiter les données biologiques sans perdre d'informations vitales, nous utilisons une méthode de "clipping" basée sur l'Écart Interquartile (IQR). Cela permet de plafonner les valeurs hors normes sans supprimer d'individus, ce qui est essentiel vu la taille finie du jeu de données. Enfin, nous appliquons une standardisation (StandardScaler) pour que chaque caractéristique (ex: âge vs nombre de globules blancs) pèse de manière équitable dans le calcul du modèle, garantissant ainsi une convergence optimale des algorithmes.
 
-## 2.Install & Activate Your Virtual Environment  
-
-Before running any code, create and activate a virtual environment.
-
-### Windows (PowerShell)
-``` shell
-.\.venv\Scripts\Activate.ps1
-```
-You should see **(.venv)** before your current directory.
-Si il y a un problème
-```shell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-### Windows (Command Prompt)
-
-``` shell
-.\.venv\Scripts\Activate
-```
-
-You should see **(.venv)** before your current directory.
-### Windows (Git Bash)
-
-```bash
-python -m venv .venv
-source .venv/Scripts/activate
-```
-
-You should see **(.venv)** before your current directory.
-
-### MacOS / Linux
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Confirm it works:
-
-```bash
-which python
-```
-## 3. Analyse exploratoire des données (EDA)
-
-### Workflow leakage-safe
-L'ordre de préparation a été corrigé pour éviter la fuite de données :
-- définition de la cible `Diagnosis` et retrait des colonnes à exclure
-- split train/test stratifié
-- prétraitement ajusté sur le train uniquement
-- sélection de features sur le train prétraité
-- application des mêmes transformations au test
-
-Le notebook [notebooks/eda.ipynb](notebooks/eda.ipynb) exporte désormais un dataset tabulaire leakage-safe de `780` lignes et `16` colonnes : `15` features sélectionnées + la cible `Diagnosis`.
-
-### Valeurs manquantes — `handle_missing_values(df)`
-Nous avons analysé les valeurs manquantes et les avons traitées en utilisant :
-- Colonnes numériques → remplacées par la médiane
-- Colonnes catégorielles → remplacées par le mode
-
-
-### Valeurs aberrantes
-Les valeurs aberrantes ont été détectées en utilisant :
-- des boxplots
-- la méthode IQR
-
-Transforme toutes les colonnes catégorielles en variables numériques via **one-hot encoding**.
-
+Prévention de la Fuite de Données (Data Leakage)
+Une attention particulière a été portée à la séparation des phases d'ajustement (fit) et de transformation (transform). En calculant tous les paramètres de préparation (médianes, bornes IQR, moyennes) exclusivement sur l'ensemble d'entraînement, nous nous assurons que les données de test restent totalement "neuves" pour le modèle. Cette approche garantit que les performances mesurées reflètent la capacité réelle du modèle à généraliser sur de futurs patients hospitaliers, évitant ainsi toute surestimation des résultats.
 
 
 ### Optimisation mémoire — `optimize_memory(df)`
