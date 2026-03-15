@@ -1,10 +1,8 @@
 # 🏥 I. Présentation du Projet
 Ce projet s'inscrit dans le cadre du développement d'outils d'aide au diagnostic médical de pointe, en exploitant le jeu de données pédiatriques de Regensburg. Il mobilise des techniques avancées de Machine Learning et de Deep Learning pour assister les cliniciens dans l'identification de l'appendicite chez l'enfant. En combinant l'analyse de données biologiques et l'imagerie médicale, cette initiative cherche à apporter une réponse technologique fiable à un défi de santé publique complexe, où la rapidité de décision est cruciale.
 
-# 🧬 II. Description du Projet
-Le cœur du projet repose sur une approche multimodale innovante qui traite simultanément deux types de flux d'informations. D'une part, une branche du modèle analyse les données tabulaires (résultats d'examens de sang, constantes cliniques, âge), préalablement nettoyées et normalisées. D'autre part, une branche spécialisée dans le traitement d'images (CNN) extrait les caractéristiques pertinentes des échographies abdominales. Ces deux sources sont ensuite fusionnées pour permettre au système de pondérer les signes cliniques et visuels avant de livrer une prédiction finale.
 
-# 🎯 III. Objectifs du Projet
+# 🎯 II. Objectifs du Projet
 - Améliorer la précision du diagnostic par rapport aux scores cliniques traditionnels.
 - Réduire la variabilité liée aux méthodes d’évaluation classiques.
 - Minimiser les erreurs de diagnostic.
